@@ -1,10 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/context/AuthContext';
+import { useEffect } from 'react';
 
 // Landing and Auth Pages
 import LandingPage from '@/pages/LandingPage';
+import PricingPage from '@/pages/PricingPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import SignupPage from '@/pages/auth/SignupPage';
+import GoogleAuthDebug from '@/pages/GoogleAuthDebug';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -23,16 +26,42 @@ import TenantSettings from '@/pages/tenant/Settings';
 
 // Shared Components
 import PrivateRoute from '@/components/PrivateRoute';
+import DebugLogger from '@/components/DebugLogger';
 
 function App() {
+  useEffect(() => {
+    console.log('🚀 App component mounted');
+    console.log('📍 Current URL:', window.location.href);
+    console.log('🌍 Environment:', import.meta.env.MODE);
+    
+    // Log any unhandled errors
+    const handleError = (event: ErrorEvent) => {
+      console.error('🚨 Unhandled Error:', event.error);
+    };
+    
+    const handleRejection = (event: PromiseRejectionEvent) => {
+      console.error('🚨 Unhandled Promise Rejection:', event.reason);
+    };
+    
+    window.addEventListener('error', handleError);
+    window.addEventListener('unhandledrejection', handleRejection);
+    
+    return () => {
+      window.removeEventListener('error', handleError);
+      window.removeEventListener('unhandledrejection', handleRejection);
+    };
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
+          <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/debug-google-auth" element={<GoogleAuthDebug />} />
 
           {/* Admin Routes */}
           <Route 
@@ -137,6 +166,7 @@ function App() {
           {/* Fallback Route */}
           <Route path="*" element={<Navigate to="/\" replace />} />
         </Routes>
+        <DebugLogger />
       </Router>
     </AuthProvider>
   );

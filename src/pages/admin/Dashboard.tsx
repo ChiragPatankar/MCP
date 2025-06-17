@@ -6,11 +6,17 @@ import {
   Zap, 
   ArrowUp,
   ArrowDown,
-  AlertTriangle
+  AlertTriangle,
+  Settings,
+  Bell,
+  TrendingUp
 } from 'lucide-react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 
 const DashboardCard = ({ title, value, icon, change, changeType }: { 
   title: string, 
@@ -46,6 +52,15 @@ const DashboardCard = ({ title, value, icon, change, changeType }: {
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const [showNotifications, setShowNotifications] = React.useState(false);
+
+  // Mock admin notifications
+  const notifications = [
+    { id: 1, title: 'System Alert', message: 'High server load detected', time: '10 min ago', type: 'warning' },
+    { id: 2, title: 'New Signup', message: 'TechCorp upgraded to Pro plan', time: '1 hour ago', type: 'success' },
+    { id: 3, title: 'Payment Issue', message: 'HealthTech payment failed', time: '2 hours ago', type: 'error' }
+  ];
 
   const recentTenants = [
     { id: '1', name: 'TechCorp', plan: 'Pro', status: 'active', users: 12, bots: 8, date: '2 days ago' },
@@ -61,19 +76,101 @@ const AdminDashboard: React.FC = () => {
     { id: '3', tenant: 'TechCorp', message: 'Unusual traffic spike detected', level: 'low', time: '2 days ago' },
   ];
 
+  const handleViewAllTenants = () => {
+    navigate('/admin/tenants');
+  };
+
+  const handleViewTenant = (tenantId: string) => {
+    navigate(`/admin/tenants/${tenantId}`);
+  };
+
+  const handleSettings = () => {
+    navigate('/admin/settings');
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-8">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight">Admin Dashboard</h2>
-            <p className="text-muted-foreground">Welcome back, {user?.name}!</p>
+        {/* Modern Header */}
+        <div className="bg-gradient-to-r from-white via-blue-50 to-indigo-50 border-b border-gray-100 shadow-soft -mx-6 px-6 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+            <div className="space-y-3">
+              <div className="flex items-center space-x-4">
+                <h2 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
+                  Admin Dashboard
+                </h2>
+                <div className="flex items-center bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full shadow-sm">
+                  <TrendingUp className="h-4 w-4 mr-2" />
+                  <span className="text-sm font-medium">Live Data</span>
+                </div>
+              </div>
+              <p className="text-lg text-gray-600">Welcome back, {user?.name}!</p>
+              <div className="flex items-center text-sm text-gray-500">
+                <span>Last updated: {new Date().toLocaleString()}</span>
+              </div>
+            </div>
+
+            <div className="mt-6 md:mt-0 flex items-center space-x-3">
+              <Button 
+                onClick={handleSettings}
+                variant="outline" 
+                className="btn-secondary"
+              >
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
+
+              <div className="relative">
+                <Button
+                  onClick={() => setShowNotifications(!showNotifications)}
+                  variant="outline"
+                  className="btn-secondary relative"
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  Notifications
+                  {notifications.length > 0 && (
+                    <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      {notifications.length}
+                    </div>
+                  )}
+                </Button>
+
+                {showNotifications && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-large z-50">
+                    <div className="p-4 border-b border-gray-100">
+                      <h3 className="font-semibold text-gray-900">Admin Notifications</h3>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.map((notification) => (
+                        <div key={notification.id} className="p-4 border-b border-gray-50 hover:bg-gray-50">
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-2 h-2 rounded-full mt-2 ${
+                              notification.type === 'success' ? 'bg-green-500' : 
+                              notification.type === 'warning' ? 'bg-yellow-500' : 
+                              notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+                            }`}></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                              <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                              <p className="text-xs text-gray-500 mt-2">{notification.time}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <div className="mt-4 md:mt-0">
-            <p className="text-sm text-muted-foreground">
-              Last updated: <span className="font-medium">{new Date().toLocaleString()}</span>
-            </p>
-          </div>
+
+          {/* Click outside to close notifications */}
+          {showNotifications && (
+            <div 
+              className="fixed inset-0 z-40" 
+              onClick={() => setShowNotifications(false)}
+            />
+          )}
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -115,14 +212,18 @@ const AdminDashboard: React.FC = () => {
             <CardContent>
               <div className="space-y-4">
                 {recentTenants.map((tenant) => (
-                  <div key={tenant.id} className="flex items-start space-x-4 bg-gray-50 p-3 rounded-md">
+                  <div 
+                    key={tenant.id} 
+                    className="flex items-start space-x-4 bg-gray-50 p-3 rounded-md hover:bg-gray-100 transition-colors cursor-pointer"
+                    onClick={() => handleViewTenant(tenant.id)}
+                  >
                     <div className={`rounded-full h-2 w-2 mt-2 ${
                       tenant.status === 'active' ? 'bg-green-500' :
                       tenant.status === 'suspended' ? 'bg-red-500' : 'bg-yellow-500'
                     }`} />
                     <div className="flex-1 space-y-1">
                       <div className="flex justify-between">
-                        <p className="text-sm font-medium">{tenant.name}</p>
+                        <p className="text-sm font-medium hover:text-primary-600 transition-colors">{tenant.name}</p>
                         <span className={`text-xs px-2 py-0.5 rounded-full ${
                           tenant.plan === 'Free' ? 'bg-gray-100 text-gray-800' :
                           tenant.plan === 'Starter' ? 'bg-blue-100 text-blue-800' :
@@ -142,9 +243,13 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
               <div className="mt-4 text-center">
-                <a href="/admin/tenants" className="text-sm text-primary hover:underline">
+                <Button 
+                  onClick={handleViewAllTenants}
+                  variant="outline"
+                  className="text-sm text-primary hover:underline"
+                >
                   View all tenants
-                </a>
+                </Button>
               </div>
             </CardContent>
           </Card>

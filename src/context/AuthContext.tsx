@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/types";
+import { googleAuth, GoogleUser } from "@/lib/googleAuth";
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 interface AuthContextType {
   user: User | null;
@@ -13,56 +16,67 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock user data for demonstration
-const mockAdminUser: User = {
-  id: "admin-1",
-  name: "Admin User",
-  email: "admin@mcpchat.com",
-  role: "admin",
-  createdAt: new Date(),
-};
-
-const mockTenantUser: User = {
-  id: "tenant-1",
-  name: "John Doe",
-  email: "john@example.com",
-  role: "tenant",
-  createdAt: new Date(),
-};
-
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
+    console.log('🔐 AuthProvider: Initializing...');
     // Check for stored user data in localStorage
     const storedUser = localStorage.getItem("mcp-user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    const storedToken = localStorage.getItem("auth-token");
+    
+    console.log('🔐 AuthProvider: Stored user exists:', !!storedUser);
+    console.log('🔐 AuthProvider: Stored token exists:', !!storedToken);
+    
+    if (storedUser && storedToken) {
+      const parsedUser = JSON.parse(storedUser);
+      console.log('🔐 AuthProvider: Restored user:', parsedUser);
+      setUser(parsedUser);
     }
     setIsLoading(false);
+    console.log('🔐 AuthProvider: Initialization complete');
   }, []);
 
   const login = async (email: string, password: string) => {
+    console.log('🔐 AuthProvider: Starting login for:', email);
     setIsLoading(true);
     try {
-      // Mock API call - in a real app, this would call your backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Simulate login logic
-      let loggedInUser;
-      if (email === "admin@mcpchat.com") {
-        loggedInUser = mockAdminUser;
-      } else if (email === "john@example.com") {
-        loggedInUser = mockTenantUser;
-      } else {
-        throw new Error("Invalid credentials");
+      console.log('🔐 AuthProvider: Making API call to:', `${API_BASE_URL}/auth/signin`);
+      const response = await fetch(`${API_BASE_URL}/auth/signin`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      console.log('🔐 AuthProvider: Login response status:', response.status);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('🔐 AuthProvider: Login failed:', errorData);
+        throw new Error(errorData.error || 'Login failed');
       }
+
+      const { token, user: userData } = await response.json();
+      console.log('🔐 AuthProvider: Login successful, user data:', userData);
       
-      setUser(loggedInUser);
-      localStorage.setItem("mcp-user", JSON.stringify(loggedInUser));
+      // Convert backend user format to frontend format
+      const userWithCorrectFormat: User = {
+        id: userData.id.toString(),
+        name: userData.name,
+        email: userData.email,
+        role: "tenant", // All users are tenants in this system
+        createdAt: new Date(userData.created_at),
+      };
+      
+      setUser(userWithCorrectFormat);
+      localStorage.setItem("mcp-user", JSON.stringify(userWithCorrectFormat));
+      localStorage.setItem("auth-token", token);
+      console.log('🔐 AuthProvider: User logged in and stored');
     } catch (error) {
-      console.error("Login failed:", error);
+      console.error("🔐 AuthProvider: Login failed:", error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -72,20 +86,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signupWithEmail = async (name: string, email: string, password: string, companyName: string) => {
     setIsLoading(true);
     try {
-      // Mock API call - in a real app, this would call your backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, email, password }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Signup failed');
+      }
+
+      const { token, user: userData } = await response.json();
       
-      // Create a new tenant user
-      const newUser: User = {
-        id: `tenant-${Date.now()}`,
-        name,
-        email,
-        role: "tenant",
-        createdAt: new Date(),
+      // Convert backend user format to frontend format
+      const userWithCorrectFormat: User = {
+        id: userData.id.toString(),
+        name: userData.name,
+        email: userData.email,
+        role: "tenant", // All users are tenants in this system
+        createdAt: new Date(userData.created_at),
       };
       
-      setUser(newUser);
-      localStorage.setItem("mcp-user", JSON.stringify(newUser));
+      setUser(userWithCorrectFormat);
+      localStorage.setItem("mcp-user", JSON.stringify(userWithCorrectFormat));
+      localStorage.setItem("auth-token", token);
     } catch (error) {
       console.error("Signup failed:", error);
       throw error;
@@ -94,15 +121,51 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const authenticateWithGoogle = async (googleUser: GoogleUser): Promise<User> => {
+    // Send Google user data to your backend for authentication/registration
+    const response = await fetch(`${API_BASE_URL}/auth/google`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        credential: googleUser.credential, // The actual Google ID token
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error || 'Google authentication failed');
+    }
+
+    const { token, user: userData } = await response.json();
+    
+    // Store auth token
+    localStorage.setItem("auth-token", token);
+    
+    // Convert backend user format to frontend format
+    const userWithCorrectFormat: User = {
+      id: userData.id.toString(),
+      name: userData.name,
+      email: userData.email,
+      role: "tenant",
+      createdAt: new Date(userData.created_at),
+    };
+    
+    return userWithCorrectFormat;
+  };
+
   const loginWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Mock Google OAuth flow - in a real app, this would use a library like Firebase Auth
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use real Google authentication
+      const googleUser: GoogleUser = await googleAuth.signIn();
       
-      // Simulate successful Google login
-      setUser(mockTenantUser);
-      localStorage.setItem("mcp-user", JSON.stringify(mockTenantUser));
+      // Authenticate with backend
+      const user = await authenticateWithGoogle(googleUser);
+      setUser(user);
+      localStorage.setItem("mcp-user", JSON.stringify(user));
+      
     } catch (error) {
       console.error("Google login failed:", error);
       throw error;
@@ -114,12 +177,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signupWithGoogle = async () => {
     setIsLoading(true);
     try {
-      // Mock Google OAuth flow - in a real app, this would use a library like Firebase Auth
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Use real Google authentication
+      const googleUser: GoogleUser = await googleAuth.signIn();
       
-      // Simulate successful Google signup
-      setUser(mockTenantUser);
-      localStorage.setItem("mcp-user", JSON.stringify(mockTenantUser));
+      // Authenticate with backend (same endpoint handles both login and signup)
+      const user = await authenticateWithGoogle(googleUser);
+      setUser(user);
+      localStorage.setItem("mcp-user", JSON.stringify(user));
+      
     } catch (error) {
       console.error("Google signup failed:", error);
       throw error;
@@ -128,9 +193,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Sign out from Google
+    await googleAuth.signOut();
+    
+    // Clear local state
     setUser(null);
     localStorage.removeItem("mcp-user");
+    localStorage.removeItem("auth-token");
   };
 
   const value = {

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, User, Loader2 } from 'lucide-react';
-import { apiService } from '@/lib/api';
+import { Send, Bot, User, Loader2, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 interface Message {
@@ -14,12 +13,14 @@ interface ChatInterfaceProps {
   className?: string;
   welcomeMessage?: string;
   placeholder?: string;
+  height?: string;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({ 
   className = '', 
-  welcomeMessage = "Hello! How can I help you today?",
-  placeholder = "Type your message..."
+  welcomeMessage = "Hello! How can I help you today? 👋",
+  placeholder = "Type your message...",
+  height = "h-[600px]"
 }) => {
   const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([
@@ -32,20 +33,75 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    if (messagesEndRef.current && messagesContainerRef.current) {
+      messagesEndRef.current.scrollIntoView({ 
+        behavior: 'smooth',
+        block: 'end'
+      });
+    }
   };
 
   useEffect(() => {
-    scrollToBottom();
+    const timer = setTimeout(() => {
+      scrollToBottom();
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [messages]);
+
+  // Initialize chat session
+  useEffect(() => {
+    const initializeChat = async () => {
+      const token = localStorage.getItem('auth-token');
+      if (!token) {
+        console.error('No auth token found');
+        return;
+      }
+
+      try {
+        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+        const response = await fetch(`${API_BASE_URL}/chat/sessions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            domain: window.location.hostname,
+            userAgent: navigator.userAgent
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setSessionToken(data.sessionToken);
+          setTenantId(data.tenantId);
+        } else {
+          console.error('Failed to create chat session');
+        }
+      } catch (error) {
+        console.error('Error initializing chat session:', error);
+      }
+    };
+
+    initializeChat();
+  }, [user]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!inputMessage.trim() || isLoading) return;
+    if (!inputMessage.trim() || isLoading || !sessionToken || !tenantId) {
+      if (!sessionToken || !tenantId) {
+        console.error('Chat session not initialized');
+      }
+      return;
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -59,18 +115,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      // Call your Railway deployed backend
-      const response = await apiService.processMessage(
-        userMessage.content, 
-        user?.id || 'anonymous',
-        'normal'
-      );
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+      const response = await fetch(`${API_BASE_URL}/chat/messages`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionToken,
+          message: userMessage.content,
+          tenantId
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response.response,
+        content: data.response,
         sender: 'bot',
-        timestamp: new Date(response.timestamp)
+        timestamp: new Date(data.timestamp)
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -79,7 +147,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm experiencing technical difficulties. Please try again in a moment.",
+        content: "I'm sorry, I'm experiencing technical difficulties. Please try again in a moment. 🔧",
         sender: 'bot',
         timestamp: new Date()
       };
@@ -98,46 +166,74 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   return (
-    <div className={`flex flex-col h-full bg-white rounded-lg shadow-lg ${className}`}>
+    <div className={`flex flex-col card-modern ${height} ${className}`}>
       {/* Header */}
-      <div className="p-4 bg-primary text-white rounded-t-lg">
-        <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-            <Bot className="h-4 w-4 text-white" />
+      <div className="flex-shrink-0 p-6 gradient-primary rounded-t-2xl text-white">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+              <Bot className="h-6 w-6 text-white" />
+            </div>
+            <div className="ml-4">
+              <p className="font-semibold text-lg">AI Support Assistant</p>
+              <div className="flex items-center mt-1">
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse mr-2"></div>
+                <span className="text-sm text-white/90">Online & Ready to Help</span>
+              </div>
+            </div>
           </div>
-          <p className="ml-2 font-medium">AI Support Bot</p>
-          <div className="ml-auto flex items-center">
-            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-            <span className="ml-1 text-xs opacity-90">Online</span>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center bg-white/20 rounded-full px-3 py-1">
+              <Sparkles className="h-4 w-4 mr-1" />
+              <span className="text-sm font-medium">AI Powered</span>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 min-h-0">
-        {messages.map((message) => (
+      {/* Messages Container */}
+      <div 
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-6 space-y-6 min-h-0 max-h-full bg-gradient-to-b from-gray-50/50 to-white"
+        style={{ 
+          scrollBehavior: 'smooth',
+          overflowAnchor: 'none'
+        }}
+      >
+        {messages.map((message, index) => (
           <div
             key={message.id}
-            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'} animate-fade-in-up`}
+            style={{ animationDelay: `${index * 0.1}s` }}
           >
             <div
-              className={`max-w-[80%] rounded-lg px-4 py-2 ${
+              className={`max-w-[85%] rounded-2xl px-5 py-4 shadow-soft transition-all duration-300 hover:shadow-medium ${
                 message.sender === 'user'
-                  ? 'bg-primary text-white'
-                  : 'bg-gray-100 text-gray-900'
+                  ? 'gradient-primary text-white ml-12'
+                  : 'bg-white border border-gray-100 text-gray-900 mr-12'
               }`}
             >
-              <div className="flex items-start space-x-2">
-                <div className="flex-shrink-0 mt-1">
+              <div className="flex items-start space-x-3">
+                <div className={`flex-shrink-0 mt-1 ${
+                  message.sender === 'user' ? 'order-2' : 'order-1'
+                }`}>
                   {message.sender === 'user' ? (
-                    <User className="h-4 w-4" />
+                    <div className="w-8 h-8 bg-white/20 rounded-xl flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
                   ) : (
-                    <Bot className="h-4 w-4" />
+                    <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-md">
+                      <Bot className="h-4 w-4 text-white" />
+                    </div>
                   )}
                 </div>
-                <div className="flex-1">
-                  <p className="text-sm break-words">{message.content}</p>
-                  <p className={`text-xs mt-1 ${
+                <div className={`flex-1 ${
+                  message.sender === 'user' ? 'order-1' : 'order-2'
+                }`}>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                  <p className={`text-xs mt-2 ${
                     message.sender === 'user' 
                       ? 'text-white/70' 
                       : 'text-gray-500'
@@ -151,40 +247,86 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         ))}
         
         {isLoading && (
-          <div className="flex justify-start">
-            <div className="bg-gray-100 rounded-lg px-4 py-2">
-              <div className="flex items-center space-x-2">
-                <Bot className="h-4 w-4 text-gray-600" />
-                <Loader2 className="h-4 w-4 animate-spin text-gray-600" />
-                <span className="text-sm text-gray-600">AI is typing...</span>
+          <div className="flex justify-start animate-fade-in-up">
+            <div className="bg-white border border-gray-100 rounded-2xl px-5 py-4 shadow-soft mr-12">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-r from-primary-500 to-primary-600 rounded-xl flex items-center justify-center shadow-md">
+                  <Bot className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-primary-500" />
+                  <span className="text-sm text-gray-600">AI is thinking...</span>
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+                    <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+                    <div className="w-2 h-2 bg-primary-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         )}
         
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-0" />
       </div>
 
       {/* Input Form */}
-      <form onSubmit={handleSendMessage} className="p-4 border-t bg-gray-50 rounded-b-lg">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            value={inputMessage}
-            onChange={(e) => setInputMessage(e.target.value)}
-            placeholder={placeholder}
-            disabled={isLoading}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50"
-          />
+      <div className="flex-shrink-0 p-6 bg-white border-t border-gray-100 rounded-b-2xl">
+        <form onSubmit={handleSendMessage} className="flex space-x-4">
+          <div className="flex-1 relative">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              placeholder={placeholder}
+              disabled={isLoading}
+              className="input-modern pr-12"
+              autoComplete="off"
+            />
+            {inputMessage.trim() && (
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                <Zap className="h-4 w-4 text-primary-500" />
+              </div>
+            )}
+          </div>
           <button
             type="submit"
             disabled={!inputMessage.trim() || isLoading}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="btn-modern flex-shrink-0 group relative overflow-hidden"
           >
-            <Send className="h-4 w-4" />
+            <div className="flex items-center">
+              {isLoading ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <>
+                  <Send className="h-5 w-5 transition-transform group-hover:translate-x-0.5" />
+                  <span className="ml-2 hidden sm:inline">Send</span>
+                </>
+              )}
+            </div>
           </button>
-        </div>
-      </form>
+        </form>
+        
+        {/* Quick suggestions for first message */}
+        {messages.length === 1 && !isLoading && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            <p className="text-xs text-gray-500 w-full mb-2">Quick suggestions:</p>
+            {[
+              "How does this work?",
+              "What can you help me with?",
+              "Tell me about your features"
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                onClick={() => setInputMessage(suggestion)}
+                className="text-xs px-3 py-2 bg-gray-100 hover:bg-primary-50 hover:text-primary-600 rounded-full text-gray-600 transition-all duration-200 hover:shadow-sm"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
