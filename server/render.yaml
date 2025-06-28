@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: mcp-chat-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MCP_SERVER_URL
+        value: https://gemini-mcp-server-production.up.railway.app
+      - key: MCP_AUTH_TOKEN
+        value: test-token
+      - key: FRONTEND_URL
+        value: https://mcp-chat-support.vercel.app 
