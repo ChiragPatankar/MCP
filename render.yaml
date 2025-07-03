@@ -8,7 +8,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      # Add other env vars in the Render dashboard for security
 
   - type: web
     name: mcp-chat-frontend
