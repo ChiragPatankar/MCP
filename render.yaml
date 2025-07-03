@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: mcp-chat-backend
+    env: node
+    rootDir: server
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Add other env vars in the Render dashboard for security
+
+  - type: web
+    name: mcp-chat-frontend
+    env: node
+    rootDir: .
+    buildCommand: npm install && npm run build
+    startCommand: npm run preview
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # Add other env vars in the Render dashboard for security 
