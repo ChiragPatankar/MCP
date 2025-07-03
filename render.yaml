@@ -8,13 +8,4 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-
-  - type: web
-    name: mcp-chat-frontend
-    env: node
-    rootDir: .
-    buildCommand: npm install -g vite && npm install && npm run build
-    startCommand: npm run preview
-    envVars:
-      - key: NODE_ENV
-        value: production
+      # Add other env vars as needed
