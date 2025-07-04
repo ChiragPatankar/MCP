@@ -24,9 +24,20 @@ import ClientsPage from '@/pages/tenant/Clients';
 import AnalyticsPage from '@/pages/tenant/Analytics';
 import TenantSettings from '@/pages/tenant/Settings';
 
+// Static Pages
+import Features from '@/pages/Features';
+import Documentation from '@/pages/Documentation';
+import API from '@/pages/API';
+import Blog from '@/pages/Blog';
+import Careers from '@/pages/Careers';
+import Contact from '@/pages/Contact';
+import HelpCenter from '@/pages/HelpCenter';
+import ContactSupport from '@/pages/ContactSupport';
+import Status from '@/pages/Status';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
+
 // Shared Components
 import PrivateRoute from '@/components/PrivateRoute';
-import DebugLogger from '@/components/DebugLogger';
 
 function App() {
   useEffect(() => {
@@ -62,6 +73,16 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/debug-google-auth" element={<GoogleAuthDebug />} />
+          <Route path="/features" element={<Features />} />
+          <Route path="/documentation" element={<Documentation />} />
+          <Route path="/api" element={<API />} />
+          <Route path="/blog" element={<Blog />} />
+          <Route path="/careers" element={<Careers />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/help-center" element={<HelpCenter />} />
+          <Route path="/contact-support" element={<ContactSupport />} />
+          <Route path="/status" element={<Status />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
 
           {/* Admin Routes */}
           <Route 
@@ -166,7 +187,6 @@ function App() {
           {/* Fallback Route */}
           <Route path="*" element={<Navigate to="/\" replace />} />
         </Routes>
-        <DebugLogger />
       </Router>
     </AuthProvider>
   );

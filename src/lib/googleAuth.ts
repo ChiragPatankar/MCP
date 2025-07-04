@@ -7,6 +7,9 @@ export interface GoogleUser {
   credential?: string;
 }
 
+// Set the Google OAuth client ID to the provided value
+const GOOGLE_CLIENT_ID = '957446722705-e3g6jaj8mfq3n5dfj6cachhnn4dvr08k.apps.googleusercontent.com';
+
 class GoogleAuthService {
   private clientId: string;
   private isInitialized: boolean = false;
@@ -16,7 +19,8 @@ class GoogleAuthService {
     console.log('🔍 All import.meta.env:', import.meta.env);
     console.log('🔍 VITE_GOOGLE_CLIENT_ID from env:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
     
-    this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
+    // Use the provided client ID
+    this.clientId = GOOGLE_CLIENT_ID;
     
     // Debug: Log the client ID (masked for security)
     if (this.clientId) {

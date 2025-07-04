@@ -7,28 +7,25 @@ const Footer: React.FC = () => {
 
   const footerLinks = {
     product: [
-      { name: 'Smart Match', href: '/smart-match' },
-      { name: 'Find Mentors', href: '/discover' },
-      { name: 'Pricing', href: '/subscription' },
-      { name: 'How it Works', href: '/#how-it-works' }
+      { name: 'Features', href: '/features' },
+      { name: 'Pricing', href: '/pricing' },
+      { name: 'Documentation', href: '/documentation' },
+      { name: 'API', href: '/api' }
     ],
     company: [
-      { name: 'About Us', href: '/about' },
-      { name: 'Careers', href: '/careers' },
+      { name: 'About', href: '/about' },
       { name: 'Blog', href: '/blog' },
-      { name: 'Press', href: '/press' }
+      { name: 'Careers', href: '/careers' },
+      { name: 'Contact', href: '/contact' }
     ],
     support: [
-      { name: 'Help Center', href: '/help' },
-      { name: 'Contact Us', href: '/contact' },
+      { name: 'Help Center', href: '/help-center' },
+      { name: 'Contact Support', href: '/contact-support' },
       { name: 'Status', href: '/status' },
-      { name: 'API Docs', href: '/api' }
+      { name: 'Privacy Policy', href: '/privacy-policy' }
     ],
     legal: [
-      { name: 'Privacy Policy', href: '/privacy' },
-      { name: 'Terms of Service', href: '/terms' },
-      { name: 'Cookie Policy', href: '/cookies' },
-      { name: 'GDPR', href: '/gdpr' }
+      { name: 'Terms of Service', href: '/terms-of-service' }
     ]
   };
 
@@ -97,12 +94,12 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               {footerLinks.company.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -116,12 +113,12 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               {footerLinks.support.map((link) => (
                 <li key={link.name}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.href}
                     className="text-gray-400 hover:text-white transition-colors duration-200 text-sm"
                   >
                     {link.name}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

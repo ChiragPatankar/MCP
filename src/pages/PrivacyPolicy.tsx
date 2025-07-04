@@ -166,6 +166,7 @@ const PrivacyPolicy: React.FC = () => {
               <h3 className="text-lg font-semibold text-gray-900 mb-2">With Service Providers</h3>
               <ul className="list-disc list-inside text-gray-700 space-y-2 mb-4">
                 <li>Payment processing (Stripe)</li>
+                <li>Payment processing (Razorpay). For details on how your payment information is handled, please review the <a href="https://merchant.razorpay.com/policy/QapbNR8UgJHzCW/privacy" target="_blank" rel="noopener noreferrer" className="text-primary-600 underline">Razorpay Privacy Policy</a>.</li>
                 <li>Video calling infrastructure</li>
                 <li>Email and notification services</li>
                 <li>Analytics and monitoring tools</li>
