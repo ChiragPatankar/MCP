@@ -7,6 +7,23 @@ A powerful AI Customer Support Bot powered by **Google Gemini** and following th
 ![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-red.svg)
 ![Gemini](https://img.shields.io/badge/AI-Google%20Gemini-blue.svg)
 
+## 🚀 Quick Deploy to Hugging Face Spaces
+
+This backend is configured for deployment on Hugging Face Spaces. The deployment uses the `app.py` file as the main entry point.
+
+### Environment Variables Required:
+- `GEMINI_API_KEY`: Your Google Gemini API key
+- `DATABASE_URL`: Database connection string (optional, defaults to SQLite)
+
+### Deployment Steps:
+1. Fork this repository to your GitHub account
+2. Go to [Hugging Face Spaces](https://huggingface.co/spaces)
+3. Click "Create new Space"
+4. Choose "Docker" as the SDK
+5. Connect your GitHub repository
+6. Set the required environment variables in the Space settings
+7. Deploy!
+
 ## ✨ Features
 
 - 🤖 **Google Gemini AI** - Fast, free, and powerful AI responses

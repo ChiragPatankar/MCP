@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
 import rateLimit from 'express-rate-limit';
 import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
@@ -25,10 +24,10 @@ import { initializeDatabase } from './db/database';
 // Import WebSocket handler
 import { setupWebSocket } from './services/websocket';
 
-dotenv.config();
+// Import configuration
+import config from './config';
 
 const app = express();
-const PORT = process.env.PORT || 3001;
 
 // Create HTTP server for WebSocket support
 const server = createServer(app);
@@ -45,19 +44,15 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  windowMs: config.RATE_LIMIT_WINDOW_MS,
+  max: config.RATE_LIMIT_MAX_REQUESTS,
   message: 'Too many requests from this IP, please try again later.'
 });
 app.use('/api/', limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: [
-    process.env.FRONTEND_URL || 'http://localhost:5173',
-    'http://localhost:3000',
-    'https://your-frontend-domain.com' // Add your production frontend URL
-  ],
+  origin: config.ALLOWED_ORIGINS,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -101,11 +96,11 @@ async function startServer() {
     await initializeDatabase();
     console.log('✅ Database initialized successfully');
 
-    server.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📱 Health check: http://localhost:${PORT}/health`);
+    server.listen(config.PORT, () => {
+      console.log(`🚀 Server running on port ${config.PORT}`);
+      console.log(`📱 Health check: http://localhost:${config.PORT}/health`);
       console.log(`🔌 WebSocket server ready`);
-      console.log(`🌐 CORS enabled for: ${process.env.FRONTEND_URL}`);
+      console.log(`🌐 CORS enabled for: ${config.FRONTEND_URL}`);
     });
   } catch (error) {
     console.error('❌ Failed to start server:', error);

@@ -14,7 +14,9 @@ from sqlalchemy.orm import Session
 import models
 from mcp_config import mcp_settings
 from middleware import rate_limit_middleware, validate_mcp_request
+from app_config import config
 import time
+import uvicorn
 
 # Load environment variables
 load_dotenv()
@@ -32,7 +34,7 @@ app.middleware("http")(validate_mcp_request)
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=config.ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -71,12 +73,9 @@ class MCPBatchResponse(BaseModel):
     batch_metadata: Optional[Dict[str, Any]] = None
     mcp_version: str = "1.0"
 
-# Environment variables
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
 # Initialize Gemini
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+if config.GEMINI_API_KEY:
+    genai.configure(api_key=config.GEMINI_API_KEY)
     gemini_model = genai.GenerativeModel('gemini-1.5-flash')  # Free tier
 else:
     gemini_model = None
@@ -277,7 +276,7 @@ async def process_batch_request(
 async def health_check():
     # Test Gemini connection
     gemini_status = "disconnected"
-    if gemini_model and GEMINI_API_KEY:
+    if gemini_model and config.GEMINI_API_KEY:
         try:
             # Quick test call
             test_response = await asyncio.to_thread(
@@ -322,7 +321,7 @@ async def fetch_context(message: str, existing_context: Optional[Dict] = None) -
 
 async def process_with_gemini(message: str, context: dict, priority: str = "normal") -> str:
     """Process message with Google Gemini"""
-    if not gemini_model or not GEMINI_API_KEY:
+    if not gemini_model or not config.GEMINI_API_KEY:
         raise HTTPException(
             status_code=503, 
             detail="Gemini AI service not available. Please set GEMINI_API_KEY."
@@ -401,16 +400,17 @@ async def store_interaction(
         print(f"Error storing interaction: {str(e)}")
 
 if __name__ == "__main__":
-    import uvicorn
-    
-    # Check for required environment variables
-    if not GEMINI_API_KEY:
-        print("❌ Error: GEMINI_API_KEY environment variable is required")
+    # Validate configuration
+    try:
+        config.validate()
+    except ValueError as e:
+        print(f"❌ Configuration Error: {e}")
         print("🔑 Get your FREE Gemini API key at: https://aistudio.google.com/app/apikey")
         exit(1)
     
     print("🚀 Starting Gemini-Powered MCP Server...")
     print(f"🤖 Using Google Gemini AI (gemini-1.5-flash)")
     print(f"🔧 Server: Gemini MCP Server")
+    print(f"🌐 Host: {config.HOST}:{config.PORT}")
     
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host=config.HOST, port=config.PORT) 

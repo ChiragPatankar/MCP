@@ -199,6 +199,37 @@ npm run build
 npm start
 ```
 
+### Gemini MCP Server (Hugging Face Spaces)
+
+The Gemini MCP Server can be deployed to Hugging Face Spaces for free:
+
+**📖 For detailed deployment instructions, see: [`gemini-mcp-server/README_HF_SPACES.md`](gemini-mcp-server/README_HF_SPACES.md)**
+
+**Quick Steps:**
+1. Get a free Google Gemini API key from [Google AI Studio](https://aistudio.google.com/app/apikey)
+2. Create a new Space on [Hugging Face Spaces](https://huggingface.co/spaces)
+3. Choose "Docker" as the SDK
+4. Connect your GitHub repository
+5. Set the `GEMINI_API_KEY` environment variable
+6. Deploy!
+
+**Cost:** $0 (free tier available for both Hugging Face Spaces and Google Gemini API)
+
+### Node.js Backend (Hugging Face Spaces)
+
+The Node.js/Express backend can also be deployed to Hugging Face Spaces:
+
+**📖 For detailed deployment instructions, see: [`server/README_HF_SPACES.md`](server/README_HF_SPACES.md)**
+
+**Quick Steps:**
+1. Create a new Space on [Hugging Face Spaces](https://huggingface.co/spaces)
+2. Choose "Docker" as the SDK
+3. Connect your GitHub repository
+4. Set the `JWT_SECRET` environment variable
+5. Deploy!
+
+**Cost:** $0 (free tier available for Hugging Face Spaces)
+
 ### Docker Deployment
 ```bash
 # Build and run with Docker Compose
