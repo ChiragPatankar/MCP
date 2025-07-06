@@ -41,6 +41,11 @@ export const config = {
   // Logging
   LOG_LEVEL: process.env.LOG_LEVEL || 'info',
   
+  // Supabase Configuration
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+  
   // Validation
   validate() {
     const required = ['JWT_SECRET'];
