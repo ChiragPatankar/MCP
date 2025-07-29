@@ -24,12 +24,12 @@ RUN mkdir -p /app/data
 ENV PYTHONPATH=/app
 ENV DATABASE_URL=sqlite:///./data/mcp_server.db
 
-# Expose port
-EXPOSE 8000
+# Expose port (Hugging Face Spaces expects 7860)
+EXPOSE 7860
 
-# Health check
+# Health check (using Python instead of curl)
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/mcp/health || exit 1
+    CMD python -c "import requests; requests.get('http://localhost:7860/health')" || exit 1
 
-# Run the application
-CMD ["python", "app.py"] 
+# Run the application with uvicorn
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"] 

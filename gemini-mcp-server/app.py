@@ -96,6 +96,11 @@ async def root():
         "ai_provider": "Google Gemini"
     }
 
+@app.get("/health")
+async def simple_health():
+    """Simple health check for Docker"""
+    return {"status": "ok", "timestamp": datetime.utcnow().isoformat()}
+
 @app.get("/mcp/version")
 async def mcp_version():
     return {
