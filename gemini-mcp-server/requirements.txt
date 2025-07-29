@@ -7,8 +7,8 @@ pydantic==2.5.0
 # Google Gemini AI
 google-generativeai==0.3.2
 
-# Database dependencies
-psycopg2-binary==2.9.9
+# Database dependencies (removed psycopg2-binary for HF Spaces compatibility)
+# psycopg2-binary==2.9.9  # Removed - causes build issues on HF Spaces
 sqlalchemy==2.0.23
 
 # HTTP clients
@@ -22,6 +22,6 @@ python-dotenv==1.0.0
 # CORS and middleware
 python-multipart==0.0.6
 
-# Authentication & Security
-python-jose[cryptography]==3.3.0
-passlib[bcrypt]==1.7.4 
+# Authentication & Security (simplified for HF Spaces)
+# python-jose[cryptography]==3.3.0  # Removed - not needed for basic deployment
+# passlib[bcrypt]==1.7.4  # Removed - not needed for basic deployment 
