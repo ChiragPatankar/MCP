@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ClientSphere
 
 ![ClientSphere Logo](src/logo.png)
@@ -134,3 +135,15 @@ MIT License - see [LICENSE](LICENSE) for details.
 =======
 Made with ❤️ by Chirag 
 >>>>>>> 7c7c9ed51d81813405e7ded2f90e85d31ab34c6b
+=======
+---
+title: RAG Backend
+emoji: 🚀
+colorFrom: pink
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
+Check out the configuration reference at https://huggingface.co/docs/hub/spaces-config-reference
+>>>>>>> c7164f2c30d7155283c30c509405593b5f517157
