@@ -1,0 +1,25 @@
+# Gemini MCP Server - Requirements
+# Core FastAPI dependencies
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Google Gemini AI
+google-generativeai==0.3.2
+
+# Database dependencies (SQLite only for HF Spaces)
+sqlalchemy==2.0.23
+
+# HTTP clients
+aiohttp==3.9.1
+httpx==0.25.2
+requests==2.31.0
+
+# Environment and configuration
+python-dotenv==1.0.0
+
+# CORS and middleware
+python-multipart==0.0.6
+
+# Authentication & Security (simplified for HF Spaces)
+# Removed auth packages for basic deployment 

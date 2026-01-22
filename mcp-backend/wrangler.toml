@@ -1,0 +1,11 @@
+name = "mcp-backend"
+main = "src/index.ts"
+compatibility_date = "2024-06-17"
+
+[env.dev.vars]
+SUPABASE_URL = "https://jtkajqhpaqbpwdkmloym.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2FqcWhwYXFicHdka21sb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3ODMwMjEsImV4cCI6MjA2NzM1OTAyMX0.aRCRcA5T3W7KRkAjDfugcfdUrR8NYsIrIHKd-xf1xXg"
+
+[vars]
+SUPABASE_URL = "https://jtkajqhpaqbpwdkmloym.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp0a2FqcWhwYXFicHdka21sb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTE3ODMwMjEsImV4cCI6MjA2NzM1OTAyMX0.aRCRcA5T3W7KRkAjDfugcfdUrR8NYsIrIHKd-xf1xXg"

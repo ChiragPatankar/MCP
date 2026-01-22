@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: mcp-chat-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3001
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MCP_SERVER_URL
+        value: https://gemini-mcp-server-production.up.railway.app
+      - key: MCP_AUTH_TOKEN
+        value: test-token
+      - key: RAG_BACKEND_URL
+        sync: false  # Set in Render dashboard (e.g., https://clientsphere-rag-backend.onrender.com)
+      - key: RAG_SERVICE_TOKEN
+        sync: false  # Optional: Set if using service-to-service auth
+      - key: FRONTEND_URL
+        value: https://mcp-chat-support.vercel.app 
