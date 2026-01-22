@@ -1,46 +1,8 @@
-# Environment
-.env
-venv/
-env/
-.venv/
-
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-build/
-dist/
-*.egg-info/
-*.egg
-
-# Data directories (keep structure, ignore content)
-data/uploads/*
-data/processed/*
-data/vectordb/*
-!data/uploads/.gitkeep
-!data/processed/.gitkeep
-!data/vectordb/.gitkeep
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Logs
-*.log
-
-# Test artifacts
-.pytest_cache/
-.coverage
-htmlcov/
-temp_*.md
-
-
-
+﻿# Binary files
+*.png
+*.jpg
+*.jpeg
+*.db
+*.pdf
+public/
+data/billing/*.db
