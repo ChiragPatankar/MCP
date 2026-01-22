@@ -144,7 +144,7 @@ const About: React.FC = () => {
     role: 'CEO',
     company: 'Micro-Mentor Inc.',
     image: 'https://images.pexels.com/photos/1130626/pexels-photo-1130626.jpeg?auto=compress&cs=tinysrgb&w=400',
-    content: 'Our mission is to make world-class support accessible to every business, everywhere. MCP Chat Support is the realization of that vision.',
+    content: 'Our mission is to make world-class support accessible to every business, everywhere. ClientSphere is the realization of that vision.',
     rating: 5
   };
 

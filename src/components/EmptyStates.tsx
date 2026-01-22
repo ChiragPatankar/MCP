@@ -112,7 +112,7 @@ export const WelcomeDashboard: React.FC<{ userName: string }> = ({ userName }) =
           </div>
           <div className="flex-1">
             <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Welcome to MCP Chat Support, {userName}! 🎉
+              Welcome to ClientSphere, {userName}! 🎉
             </h2>
             <p className="text-gray-600 mb-4">
               You're just a few steps away from having an AI-powered customer support system. 

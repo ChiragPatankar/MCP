@@ -45,6 +45,11 @@ export const config = {
   SUPABASE_URL: process.env.SUPABASE_URL,
   SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
+
+  // RAG Backend (FastAPI) Configuration
+  // Node backend orchestrates sessions/messages; RAG backend provides AI answers.
+  RAG_BACKEND_URL: process.env.RAG_BACKEND_URL,
+  RAG_SERVICE_TOKEN: process.env.RAG_SERVICE_TOKEN,
   
   // Validation
   validate() {

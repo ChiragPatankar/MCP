@@ -1,16 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import TenantLayout from '@/components/layout/TenantLayout';
-import ChatInterface from '@/components/ChatInterface';
+import RAGChatInterface from '@/components/RAGChatInterface';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MessageSquare, Zap, CheckCircle, Calendar, Settings, Bell, Copy, Check } from 'lucide-react';
+import { MessageSquare, Zap, CheckCircle, Calendar, Settings, Bell, Copy, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import RAGClient from '@/api/ragClient';
 
 const LiveChatTestPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [showNotifications, setShowNotifications] = useState(false);
   const [copiedQuestion, setCopiedQuestion] = useState<string | null>(null);
+  const [ragServerStatus, setRagServerStatus] = useState<'checking' | 'online' | 'offline'>('checking');
+  const [kbId, setKbId] = useState('default');
 
   const handleSettingsClick = () => {
     navigate('/settings');
@@ -27,33 +30,65 @@ const LiveChatTestPage: React.FC = () => {
     });
   };
 
+  // Test RAG server connection on component mount
+  useEffect(() => {
+    const checkRAGServer = async () => {
+      setRagServerStatus('checking');
+      try {
+        await RAGClient.healthCheck();
+        setRagServerStatus('online');
+      } catch (err) {
+        setRagServerStatus('offline');
+      }
+    };
+    
+    checkRAGServer();
+    // Check every 30 seconds
+    const interval = setInterval(checkRAGServer, 30000);
+    
+    return () => clearInterval(interval);
+  }, []);
+
   const quickQuestions = [
     "What are your pricing plans?",
     "How do I reset my password?", 
-    "Tell me about your services",
-    "I need help with integration",
-    "What languages do you support?"
+    "What file types can I upload?",
+    "What is your refund policy?",
+    "How do I integrate ClientSphere?",
+    "What languages do you support?",
+    "What are your support hours?",
+    "How secure is my data?"
   ];
 
   return (
     <TenantLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
-        <div className="space-y-8 pb-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50 overflow-x-hidden">
+        <div className="space-y-6 sm:space-y-8 pb-6 sm:pb-8">
           {/* Modern Header */}
-          <div className="bg-white border-b border-gray-100 -mx-6 px-6 py-6">
+          <div className="bg-white border-b border-gray-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
               <div className="space-y-3">
-                <div className="flex items-center space-x-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
                     Live Chat Test
                   </h1>
-                  <div className="flex items-center bg-green-100 text-green-700 px-3 py-1.5 rounded-full shadow-sm">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>
-                    <span className="text-sm font-medium">AI Online</span>
+                  <div className={`flex items-center px-3 py-1.5 rounded-full shadow-sm ${
+                    ragServerStatus === 'online' ? 'bg-green-100 text-green-700' :
+                    ragServerStatus === 'offline' ? 'bg-red-100 text-red-700' :
+                    'bg-yellow-100 text-yellow-700'
+                  }`}>
+                    {ragServerStatus === 'online' && <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse"></div>}
+                    {ragServerStatus === 'offline' && <AlertCircle className="w-4 h-4 mr-2" />}
+                    {ragServerStatus === 'checking' && <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2 animate-pulse"></div>}
+                    <span className="text-sm font-medium">
+                      {ragServerStatus === 'online' ? 'RAG Online' :
+                       ragServerStatus === 'offline' ? 'RAG Offline' :
+                       'Checking...'}
+                    </span>
                   </div>
                 </div>
                 <p className="text-lg text-gray-600 max-w-2xl">
-                  Test your AI support bot powered by Google Gemini. Experience real-time responses and see how your customers will interact with your intelligent assistant.
+                  Test your AI support bot powered by RAG (Retrieval-Augmented Generation). Experience real-time responses from your knowledge base and see how your customers will interact with your intelligent assistant.
                 </p>
               </div>
               
@@ -82,7 +117,7 @@ const LiveChatTestPage: React.FC = () => {
                   
                   {/* Notifications Dropdown */}
                   {showNotifications && (
-                    <div className="absolute top-12 right-0 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                    <div className="absolute top-12 right-0 w-[calc(100vw-2rem)] sm:w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
                       <div className="p-4 border-b">
                         <h3 className="font-semibold text-gray-900">Notifications</h3>
                       </div>
@@ -112,7 +147,7 @@ const LiveChatTestPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="px-6">
+          <div className="px-4 sm:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Chat Interface */}
               <div className="lg:col-span-2">
@@ -125,9 +160,10 @@ const LiveChatTestPage: React.FC = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="h-[600px]">
-                      <ChatInterface 
-                        welcomeMessage="Hello! I'm your AI support assistant. Ask me anything about our services, pricing, or how I can help your business!"
-                        placeholder="Ask me anything..."
+                      <RAGChatInterface 
+                        welcomeMessage="Hello! I'm your AI support assistant powered by RAG. Ask me anything from your knowledge base!"
+                        placeholder="Ask a question from your knowledge base..."
+                        kbId={kbId}
                       />
                     </div>
                   </CardContent>
@@ -145,22 +181,45 @@ const LiveChatTestPage: React.FC = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">AI Server: Online</span>
+                      <div className={`w-2 h-2 rounded-full ${
+                        ragServerStatus === 'online' ? 'bg-green-500' :
+                        ragServerStatus === 'offline' ? 'bg-red-500' :
+                        'bg-yellow-500'
+                      }`}></div>
+                      <span className="text-sm">RAG Backend: {
+                        ragServerStatus === 'online' ? 'Connected' :
+                        ragServerStatus === 'offline' ? 'Disconnected' :
+                        'Checking...'
+                      }</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">Gemini AI: Connected</span>
+                      <div className={`w-2 h-2 rounded-full ${ragServerStatus === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span className="text-sm">Vector DB: {ragServerStatus === 'online' ? 'Ready' : 'Waiting'}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm">Database: Active</span>
+                      <div className={`w-2 h-2 rounded-full ${ragServerStatus === 'online' ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                      <span className="text-sm">LLM: {ragServerStatus === 'online' ? 'Configured' : 'Not Ready'}</span>
                     </div>
+                    {import.meta.env.DEV && (
+                      <div className="mt-4">
+                        <label className="block text-xs font-medium text-gray-700 mb-1">
+                          KB ID (Dev)
+                        </label>
+                        <input
+                          type="text"
+                          value={kbId}
+                          onChange={(e) => setKbId(e.target.value)}
+                          className="w-full px-2 py-1 text-xs border border-gray-300 rounded"
+                          placeholder="default"
+                        />
+                      </div>
+                    )}
                     <hr className="my-4" />
                     <div className="text-xs text-gray-500">
-                      <p><strong>Model:</strong> Google Gemini 1.5 Flash</p>
-                      <p><strong>Response Time:</strong> ~2 seconds</p>
-                      <p><strong>API Cost:</strong> $0.00 (Free)</p>
+                      <p><strong>Backend:</strong> RAG API</p>
+                      <p><strong>Model:</strong> Gemini/OpenAI</p>
+                      <p><strong>Response Time:</strong> ~2-5 seconds</p>
+                      <p><strong>Status:</strong> {ragServerStatus === 'online' ? '✅ Ready' : '❌ Check Connection'}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -203,24 +262,24 @@ const LiveChatTestPage: React.FC = () => {
                     <CardTitle>Quick Test Questions</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2 text-sm">
+                    <div className="space-y-2 text-sm max-h-64 overflow-y-auto">
                       {quickQuestions.map((question, index) => (
                         <div 
                           key={index}
                           onClick={() => handleQuestionClick(question)}
                           className="p-2 bg-gray-50 rounded cursor-pointer hover:bg-gray-100 transition-colors flex items-center justify-between group"
                         >
-                          <span>"{question}"</span>
+                          <span className="text-xs">"{question}"</span>
                           {copiedQuestion === question ? (
-                            <Check className="h-4 w-4 text-green-500" />
+                            <Check className="h-4 w-4 text-green-500 flex-shrink-0" />
                           ) : (
-                            <Copy className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                            <Copy className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                           )}
                         </div>
                       ))}
                     </div>
                     <p className="text-xs text-gray-500 mt-3">
-                      Click any question above to copy it to clipboard.
+                      Click any question to copy it to clipboard, then paste it in the chat.
                     </p>
                   </CardContent>
                 </Card>

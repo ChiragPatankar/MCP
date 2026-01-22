@@ -1,5 +1,5 @@
 // API Service for connecting to Gemini MCP Server
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://gemini-mcp-server-production.up.railway.app';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://huggingface.co/spaces/ChiragPatankar/Gemini_MCP_Server';
 const AUTH_TOKEN = import.meta.env.VITE_MCP_AUTH_TOKEN || 'test-token';
 
 export interface MCPResponse {

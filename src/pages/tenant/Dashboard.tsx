@@ -28,6 +28,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { WelcomeDashboard } from '@/components/EmptyStates';
 import { motion } from 'framer-motion';
+import { OnboardingForm, ProductTour } from '@/components/onboarding';
 
 // Type definitions for API responses
 interface DashboardMetrics {
@@ -198,12 +199,20 @@ const EmptyStateCard = ({ title, description, icon }: { title: string; descripti
   </Card>
 );
 
+// Onboarding state keys
+const ONBOARDING_FORM_KEY = 'clientsphere_onboarding_form_completed';
+const PRODUCT_TOUR_KEY = 'clientsphere_product_tour_completed';
+
 const Dashboard: React.FC = () => {
   const { user } = useAuth();
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Onboarding states
+  const [showOnboardingForm, setShowOnboardingForm] = useState(false);
+  const [showProductTour, setShowProductTour] = useState(false);
 
   // Check if user is new (created less than 24 hours ago)
   const isNewUser = user?.createdAt ? 
@@ -215,6 +224,74 @@ const Dashboard: React.FC = () => {
     metrics.knowledgeBaseDocuments > 0 || 
     conversations.length > 0
   );
+  
+  // Check onboarding status on mount
+  useEffect(() => {
+    if (user) {
+      const formCompleted = localStorage.getItem(`${ONBOARDING_FORM_KEY}_${user.id}`);
+      const tourCompleted = localStorage.getItem(`${PRODUCT_TOUR_KEY}_${user.id}`);
+      
+      if (!formCompleted) {
+        // Show onboarding form for new users
+        setShowOnboardingForm(true);
+      } else if (!tourCompleted) {
+        // Show product tour after form is completed
+        setShowProductTour(true);
+      }
+    }
+  }, [user]);
+  
+  const handleOnboardingFormComplete = async (data: any) => {
+    console.log('📝 Onboarding data:', data);
+    
+    // Save to localStorage
+    if (user) {
+      localStorage.setItem(`${ONBOARDING_FORM_KEY}_${user.id}`, JSON.stringify({
+        ...data,
+        completedAt: new Date().toISOString()
+      }));
+    }
+    
+    // TODO: Optionally save to backend
+    // await fetch(`${API_URL}/api/user/profile`, {
+    //   method: 'PATCH',
+    //   headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+    //   body: JSON.stringify(data)
+    // });
+    
+    setShowOnboardingForm(false);
+    setShowProductTour(true); // Show tour after form
+  };
+  
+  const handleOnboardingFormSkip = () => {
+    if (user) {
+      localStorage.setItem(`${ONBOARDING_FORM_KEY}_${user.id}`, JSON.stringify({
+        skipped: true,
+        skippedAt: new Date().toISOString()
+      }));
+    }
+    setShowOnboardingForm(false);
+    setShowProductTour(true); // Still show tour
+  };
+  
+  const handleProductTourComplete = () => {
+    if (user) {
+      localStorage.setItem(`${PRODUCT_TOUR_KEY}_${user.id}`, JSON.stringify({
+        completedAt: new Date().toISOString()
+      }));
+    }
+    setShowProductTour(false);
+  };
+  
+  const handleProductTourSkip = () => {
+    if (user) {
+      localStorage.setItem(`${PRODUCT_TOUR_KEY}_${user.id}`, JSON.stringify({
+        skipped: true,
+        skippedAt: new Date().toISOString()
+      }));
+    }
+    setShowProductTour(false);
+  };
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -225,33 +302,30 @@ const Dashboard: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        // Fetch metrics
-        const metricsResponse = await fetch(`${import.meta.env.VITE_API_URL}/analytics/metrics`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
+        // For now, set mock data since analytics endpoints aren't implemented yet
+        // TODO: Implement /api/analytics/metrics and /api/analytics/chat-history endpoints
+        setMetrics({
+          totalConversations: 0,
+          thisMonthConversations: 0,
+          averageRating: 0,
+          resolutionRate: 0,
+          knowledgeBaseDocuments: 0
         });
-
-        if (!metricsResponse.ok) {
-          throw new Error('Failed to fetch metrics');
-        }
-
-        const metricsData = await metricsResponse.json();
-        setMetrics(metricsData);
-
-        // Fetch recent conversations
-        const conversationsResponse = await fetch(`${import.meta.env.VITE_API_URL}/analytics/chat-history?limit=5`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        });
-
-        if (conversationsResponse.ok) {
-          const conversationsData = await conversationsResponse.json();
-          setConversations(conversationsData.conversations || []);
-        }
+        setConversations([]);
+        
+        // Uncomment when backend analytics endpoints are ready:
+        // const metricsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/analytics/metrics`, {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
+        // const conversationsResponse = await fetch(`${import.meta.env.VITE_API_URL}/api/analytics/chat-history?limit=5`, {
+        //   headers: {
+        //     'Authorization': `Bearer ${token}`,
+        //     'Content-Type': 'application/json'
+        //   }
+        // });
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -287,14 +361,32 @@ const Dashboard: React.FC = () => {
 
   return (
     <TenantLayout>
+      {/* Onboarding Form Modal */}
+      {showOnboardingForm && (
+        <OnboardingForm
+          initialName={user?.name}
+          initialEmail={user?.email}
+          onComplete={handleOnboardingFormComplete}
+          onSkip={handleOnboardingFormSkip}
+        />
+      )}
+      
+      {/* Product Tour Modal */}
+      {showProductTour && (
+        <ProductTour
+          onComplete={handleProductTourComplete}
+          onSkip={handleProductTourSkip}
+        />
+      )}
+      
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
         <div className="space-y-8 pb-8">
           {/* Modern Header */}
-          <div className="bg-white border-b border-gray-100 -mx-6 px-6 py-6">
+          <div className="bg-white border-b border-gray-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
                     {isNewUser || !hasAnyData ? 'Welcome!' : 'Dashboard'}
                   </h1>
                   {hasAnyData && (

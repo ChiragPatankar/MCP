@@ -9,6 +9,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
 import { EmptyState } from '@/components/EmptyStates';
 import { useNavigate } from 'react-router-dom';
+import { extractTextFromPDF } from '@/lib/pdfExtractor';
 
 const DocumentCard = ({ doc, index }: { doc: KnowledgeBase; index: number }) => {
   const getStatusConfig = (status: string) => {
@@ -343,7 +344,9 @@ const KnowledgeBasePage: React.FC = () => {
         setLoading(true);
         setError(null);
 
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/knowledge-base`, {
+        // Include user_id in query params to filter documents for this user
+        const userId = user?.id || '';
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/knowledge-base?user_id=${encodeURIComponent(userId)}`, {
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -355,7 +358,25 @@ const KnowledgeBasePage: React.FC = () => {
         }
 
         const data = await response.json();
-        setKnowledgeBase(data.documents || []);
+        console.log('📦 Knowledge base data received:', data);
+        
+        // Backend returns { data: [...], count: N }
+        const documents = data.data || data.documents || [];
+        
+        // Map backend format to frontend format
+        const mappedDocs = documents.map((doc: any) => ({
+          id: doc.id,
+          tenantId: doc.tenant_id,
+          name: doc.name,
+          type: doc.type,
+          source: doc.source,
+          status: doc.status || 'active',
+          size: doc.size || 0,
+          createdAt: doc.created_at ? new Date(doc.created_at) : new Date(),
+          updatedAt: doc.updated_at ? new Date(doc.updated_at) : new Date()
+        }));
+        
+        setKnowledgeBase(mappedDocs);
 
       } catch (err) {
         console.error('Error fetching knowledge base:', err);
@@ -378,9 +399,10 @@ const KnowledgeBasePage: React.FC = () => {
   const totalSize = knowledgeBase.reduce((total, doc) => total + (doc.size || 0), 0);
   const activeDocuments = knowledgeBase.filter(doc => doc.status === 'active').length;
 
-  const handleUpload = (file: File) => {
-    const newDoc: KnowledgeBase = {
-      id: (knowledgeBase.length + 1).toString(),
+  const handleUpload = async (file: File) => {
+    // Create optimistic UI update
+    const tempDoc: KnowledgeBase = {
+      id: `temp_${Date.now()}`,
       tenantId: user?.id || '',
       name: file.name.replace(/\.[^/.]+$/, ""),
       type: (['pdf', 'website', 'text'].includes(file.name.split('.').pop() || '') ? file.name.split('.').pop() : 'text') as 'pdf' | 'website' | 'text',
@@ -390,12 +412,114 @@ const KnowledgeBasePage: React.FC = () => {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    setKnowledgeBase([...knowledgeBase, newDoc]);
+    
+    // Add to UI immediately
+    setKnowledgeBase(prev => [...prev, tempDoc]);
+    
+    try {
+      console.log('📄 Processing file:', file.name);
+      
+      // Extract text from PDF
+      let extractedText = '';
+      if (file.type === 'application/pdf') {
+        console.log('🔍 Extracting text from PDF...');
+        const extraction = await extractTextFromPDF(file);
+        if (extraction.success) {
+          extractedText = extraction.text;
+          console.log(`✅ Extracted ${extractedText.length} characters from ${extraction.numPages} pages`);
+        } else {
+          console.warn('⚠️ PDF text extraction failed:', extraction.error);
+        }
+      }
+      
+      // First, upload the file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('tenantId', user?.id || '');
+      formData.append('name', tempDoc.name);
+      formData.append('type', tempDoc.type);
+      
+      const uploadResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev'}/api/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!uploadResponse.ok) {
+        throw new Error(`Upload failed: ${uploadResponse.status}`);
+      }
+      
+      const uploadResult = await uploadResponse.json();
+      
+      // Then, create the knowledge base entry with extracted content
+      const kbResponse = await fetch(`${import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev'}/api/knowledge-base`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: tempDoc.name,
+          type: tempDoc.type,
+          source: file.name,
+          tenant_id: user?.id || '',
+          user_id: user?.id || '', // User-specific document isolation
+          size: tempDoc.size,
+          upload_id: uploadResult.uploadId,
+          content: extractedText || null // Include extracted text
+        }),
+      });
+      
+      if (!kbResponse.ok) {
+        throw new Error(`Knowledge base creation failed: ${kbResponse.status}`);
+      }
+      
+      const kbResult = await kbResponse.json();
+      const docId = kbResult.data[0]?.id;
+      
+      // If we have extracted text and a document ID, update the content
+      if (extractedText && docId) {
+        console.log('📝 Updating document with extracted content...');
+        await fetch(`${import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev'}/api/knowledge-base`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            id: docId,
+            content: extractedText,
+            status: 'active'
+          }),
+        });
+        console.log('✅ Document content updated successfully');
+      }
+      
+      // Update the temporary document with the real data
+      setKnowledgeBase(prev => prev.map(doc => 
+        doc.id === tempDoc.id 
+          ? { ...tempDoc, id: docId || tempDoc.id, status: 'active' }
+          : doc
+      ));
+      
+      console.log('✅ File uploaded and knowledge base entry created successfully');
+      
+    } catch (error) {
+      console.error('❌ Upload failed:', error);
+      
+      // Update the document to show error status
+      setKnowledgeBase(prev => prev.map(doc => 
+        doc.id === tempDoc.id 
+          ? { ...doc, status: 'error' }
+          : doc
+      ));
+      
+      // Optionally show error message to user
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
-  const handleAddUrl = (url: string, title: string) => {
-    const newDoc: KnowledgeBase = {
-      id: (knowledgeBase.length + 1).toString(),
+  const handleAddUrl = async (url: string, title: string) => {
+    // Create optimistic UI update
+    const tempDoc: KnowledgeBase = {
+      id: `temp_${Date.now()}`,
       tenantId: user?.id || '',
       name: title,
       type: 'website',
@@ -405,7 +529,54 @@ const KnowledgeBasePage: React.FC = () => {
       createdAt: new Date(),
       updatedAt: new Date()
     };
-    setKnowledgeBase([...knowledgeBase, newDoc]);
+    
+    // Add to UI immediately
+    setKnowledgeBase(prev => [...prev, tempDoc]);
+    
+    try {
+      // Create the knowledge base entry
+      const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev'}/api/knowledge-base`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: title,
+          type: 'website',
+          source: url,
+          tenant_id: user?.id || '',
+          size: 0
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to add URL: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      // Update the temporary document with the real data
+      setKnowledgeBase(prev => prev.map(doc => 
+        doc.id === tempDoc.id 
+          ? { ...tempDoc, id: result.data[0]?.id || tempDoc.id, status: 'active' }
+          : doc
+      ));
+      
+      console.log('✅ URL added to knowledge base successfully');
+      
+    } catch (error) {
+      console.error('❌ Failed to add URL:', error);
+      
+      // Update the document to show error status
+      setKnowledgeBase(prev => prev.map(doc => 
+        doc.id === tempDoc.id 
+          ? { ...doc, status: 'error' }
+          : doc
+      ));
+      
+      // Optionally show error message to user
+      alert(`Failed to add URL: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   const handleView = (id: string) => {
@@ -416,9 +587,31 @@ const KnowledgeBasePage: React.FC = () => {
     console.log('Downloading document:', id);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this document?')) {
-      setKnowledgeBase(knowledgeBase.filter(doc => doc.id !== id));
+      try {
+        // Remove from UI optimistically
+        const originalKnowledgeBase = knowledgeBase;
+        setKnowledgeBase(knowledgeBase.filter(doc => doc.id !== id));
+        
+        // Delete from backend
+        const response = await fetch(`${import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev'}/api/knowledge-base?id=${id}`, {
+          method: 'DELETE',
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Delete failed: ${response.status}`);
+        }
+        
+        console.log('✅ Document deleted successfully');
+        
+      } catch (error) {
+        console.error('❌ Delete failed:', error);
+        
+        // Restore the original state on error
+        setKnowledgeBase(knowledgeBase);
+        alert(`Delete failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
   };
 
@@ -443,7 +636,7 @@ const KnowledgeBasePage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
         <div className="space-y-8 pb-8">
           {/* Modern Header */}
-          <div className="bg-gradient-to-r from-white via-purple-50 to-blue-50 border-b border-gray-100 shadow-soft -mx-6 px-6 py-6">
+          <div className="bg-gradient-to-r from-white via-purple-50 to-blue-50 border-b border-gray-100 shadow-soft -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">

@@ -52,7 +52,7 @@ const API: React.FC = () => (
       {/* Hero Section */}
       <div className="mb-12">
         <p className="text-xl text-gray-700 max-w-2xl">
-          Integrate MCP Chat Support into your product with our robust, developer-friendly API.
+          Integrate ClientSphere into your product with our robust, developer-friendly API.
         </p>
       </div>
       {/* API Endpoints Grid */}

@@ -9,6 +9,8 @@ import {
   Users, 
   BarChart, 
   MonitorSmartphone,
+  Brain,
+  DollarSign,
   ChevronDown,
   Menu,
   X,
@@ -33,9 +35,11 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { name: 'Knowledge Base', path: '/knowledge-base', icon: <Book className="w-5 h-5" /> },
+    { name: 'Knowledge Base', path: '/rag/knowledge-base', icon: <Book className="w-5 h-5" /> },
+    { name: 'Retrieval Test', path: '/rag/retrieval', icon: <Brain className="w-5 h-5" /> },
+    { name: 'Chat Test', path: '/rag/chat', icon: <MessageSquare className="w-5 h-5" /> },
+    { name: 'Billing & Usage', path: '/rag/billing', icon: <DollarSign className="w-5 h-5" /> },
     { name: 'Chat History', path: '/chat-history', icon: <MessageSquare className="w-5 h-5" /> },
-    { name: 'Live Chat Test', path: '/live-chat', icon: <MessageSquare className="w-5 h-5" /> },
     { name: 'Widget', path: '/widget', icon: <MonitorSmartphone className="w-5 h-5" /> },
     { name: 'Clients', path: '/clients', icon: <Users className="w-5 h-5" /> },
     { name: 'Analytics', path: '/analytics', icon: <BarChart className="w-5 h-5" /> },
@@ -48,10 +52,8 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-200">
         <div className="p-6">
           <div className="flex items-center space-x-2">
-            <div className="bg-primary text-white p-2 rounded-md">
-              <MessageSquare className="h-6 w-6" />
-            </div>
-            <span className="text-xl font-bold">MCP Chat</span>
+            <img src="/logo.png" alt="ClientSphere" className="h-10 w-10 rounded-lg" />
+            <span className="text-xl font-bold">ClientSphere</span>
           </div>
         </div>
         <nav className="flex-1 px-4 py-2 space-y-1">
@@ -97,10 +99,8 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-10">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-2">
-            <div className="bg-primary text-white p-1.5 rounded-md">
-              <MessageSquare className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold">MCP Chat</span>
+            <img src="/logo.png" alt="ClientSphere" className="h-8 w-8 rounded-lg" />
+            <span className="text-lg font-bold">ClientSphere</span>
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}
@@ -114,7 +114,7 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       {/* Mobile sidebar */}
       {isOpen && (
         <div className="md:hidden fixed inset-0 z-20 bg-gray-800 bg-opacity-50">
-          <div className="absolute top-0 right-0 bottom-0 w-64 bg-white">
+          <div className="absolute top-0 right-0 bottom-0 w-[85vw] sm:w-64 bg-white">
             <div className="flex justify-end p-4">
               <button
                 onClick={() => setIsOpen(false)}
@@ -166,8 +166,8 @@ const TenantLayout: React.FC<TenantLayoutProps> = ({ children }) => {
       )}
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
-        <div className="pt-16 md:pt-0 px-4 md:px-8 py-6 max-w-7xl mx-auto">
+      <main className="flex-1 overflow-auto overflow-x-hidden">
+        <div className="pt-16 md:pt-0 px-4 md:px-8 py-6 max-w-7xl mx-auto w-full">
           {children}
         </div>
       </main>

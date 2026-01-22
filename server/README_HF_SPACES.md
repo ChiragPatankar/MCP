@@ -54,6 +54,8 @@ NODE_ENV=production
 DATABASE_URL=sqlite:./database.sqlite
 FRONTEND_URL=https://your-frontend-domain.com
 ALLOWED_ORIGINS=https://your-frontend-domain.com,http://localhost:5173
+RAG_BACKEND_URL=http://localhost:8000
+RAG_SERVICE_TOKEN=optional_service_token_for_rag_backend
 GOOGLE_CLIENT_ID=your_google_client_id
 GOOGLE_CLIENT_SECRET=your_google_client_secret
 STRIPE_SECRET_KEY=your_stripe_secret_key
@@ -99,6 +101,37 @@ The backend uses SQLite by default, which is perfect for Hugging Face Spaces as 
 2. **API Test**: Test the authentication endpoints
 3. **WebSocket Test**: Connect to the WebSocket server
 4. **Integration**: Update your frontend to use the new backend URL
+
+### Quick RAG Chat Test (curl)
+
+Create a public widget session:
+
+```bash
+curl -X POST http://localhost:3001/api/chat/public/sessions ^
+  -H "Content-Type: application/json" ^
+  -d "{\"tenantId\":1,\"domain\":\"localhost\",\"userAgent\":\"curl\"}"
+```
+
+Send a message (note: `tenantId` is optional; if provided it must match the session tenant):
+
+```bash
+curl -X POST http://localhost:3001/api/chat/messages ^
+  -H "Content-Type: application/json" ^
+  -d "{\"sessionToken\":\"<SESSION_TOKEN_FROM_PREVIOUS_STEP>\",\"message\":\"What is your refund policy?\"}"
+```
+
+Expected response shape (widget-compatible):
+
+- `response`: string
+- `messageId`: number
+- `timestamp`: ISO string
+- `rag` (optional): enriched RAG metadata for dashboards/widgets:
+  - `confidence?: number`
+  - `refused?: boolean`
+  - `refusal_reason?: string`
+  - `citations?: Array<{ file_name?: string; page?: number; chunk_id?: string; text_preview?: string }>`
+  - `provider?: string`
+  - `model?: string`
 
 ## Troubleshooting
 

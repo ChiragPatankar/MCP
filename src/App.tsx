@@ -7,7 +7,7 @@ import LandingPage from '@/pages/LandingPage';
 import PricingPage from '@/pages/PricingPage';
 import LoginPage from '@/pages/auth/LoginPage';
 import SignupPage from '@/pages/auth/SignupPage';
-import GoogleAuthDebug from '@/pages/GoogleAuthDebug';
+import GoogleCallbackPage from '@/pages/auth/GoogleCallback';
 
 // Admin Pages
 import AdminDashboard from '@/pages/admin/Dashboard';
@@ -38,6 +38,12 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 
 // Shared Components
 import PrivateRoute from '@/components/PrivateRoute';
+import { ToastProvider } from '@/components/ToastContainer';
+
+// RAG Pages
+import RAGKnowledgeBasePage from '@/pages/tenant/RAGKnowledgeBase';
+import RetrievalTestPage from '@/pages/tenant/RetrievalTest';
+import BillingUsagePage from '@/pages/tenant/BillingUsage';
 
 function App() {
   useEffect(() => {
@@ -51,6 +57,12 @@ function App() {
     };
     
     const handleRejection = (event: PromiseRejectionEvent) => {
+      // Filter out MetaMask connection errors (common browser extension issue)
+      if (event.reason && event.reason.toString().includes('MetaMask')) {
+        console.warn('⚠️ MetaMask extension detected but not used by this app');
+        event.preventDefault(); // Prevent the error from showing in console
+        return;
+      }
       console.error('🚨 Unhandled Promise Rejection:', event.reason);
     };
     
@@ -65,14 +77,15 @@ function App() {
 
   return (
     <AuthProvider>
-      <Router>
+      <ToastProvider>
+        <Router>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
-          <Route path="/debug-google-auth" element={<GoogleAuthDebug />} />
+          <Route path="/auth/google/callback" element={<GoogleCallbackPage />} />
           <Route path="/features" element={<Features />} />
           <Route path="/documentation" element={<Documentation />} />
           <Route path="/api" element={<API />} />
@@ -152,6 +165,38 @@ function App() {
             } 
           />
           <Route 
+            path="/rag/knowledge-base" 
+            element={
+              <PrivateRoute role="tenant">
+                <RAGKnowledgeBasePage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/rag/retrieval" 
+            element={
+              <PrivateRoute role="tenant">
+                <RetrievalTestPage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/rag/chat" 
+            element={
+              <PrivateRoute role="tenant">
+                <LiveChatTestPage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
+            path="/rag/billing" 
+            element={
+              <PrivateRoute role="tenant">
+                <BillingUsagePage />
+              </PrivateRoute>
+            } 
+          />
+          <Route 
             path="/widget" 
             element={
               <PrivateRoute role="tenant">
@@ -188,6 +233,7 @@ function App() {
           <Route path="*" element={<Navigate to="/\" replace />} />
         </Routes>
       </Router>
+      </ToastProvider>
     </AuthProvider>
   );
 }

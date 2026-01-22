@@ -130,7 +130,7 @@ const LandingPage: React.FC = () => {
       role: "Head of Customer Success",
       company: "TechFlow",
       image: "https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400",
-      content: "MCP Chat Support reduced our response time by 85% and improved customer satisfaction significantly. The AI is incredibly smart.",
+      content: "ClientSphere reduced our response time by 85% and improved customer satisfaction significantly. The AI is incredibly smart.",
       rating: 5
     },
     {
@@ -138,7 +138,7 @@ const LandingPage: React.FC = () => {
       role: "CTO",
       company: "DataVault",
       image: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=400",
-      content: "Setup was seamless, and the multi-tenant architecture is exactly what we needed for our various product lines.",
+      content: "Setup was seamless, and the CRM integration is exactly what we needed for managing our customer relationships.",
       rating: 5
     },
     {
@@ -162,10 +162,8 @@ const LandingPage: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white p-2.5 rounded-xl shadow-lg">
-                <MessageSquare className="h-6 w-6" />
-              </div>
-              <span className="ml-3 text-xl font-bold text-gradient">MCP Chat Support</span>
+              <img src="/logo.png" alt="ClientSphere" className="h-10 w-10 rounded-lg" />
+              <span className="ml-3 text-xl font-bold text-gradient">ClientSphere</span>
             </motion.div>
             
             {/* Desktop Navigation */}
@@ -272,7 +270,7 @@ const LandingPage: React.FC = () => {
                 variants={fadeInUp}
                 className="text-lg md:text-xl text-gray-600 mb-6 max-w-2xl text-balance"
               >
-                Deploy an intelligent AI chatbot powered by Google Gemini that learns from your knowledge base and provides instant, accurate support to your customers 24/7.
+                The complete AI-powered chatbot & CRM platform. Manage customer relationships, automate support, and grow your business with intelligent conversations.
               </motion.p>
               
               <motion.div 
@@ -629,13 +627,11 @@ const LandingPage: React.FC = () => {
           <div className="grid md:grid-cols-4 gap-8">
             <div className="md:col-span-1">
               <div className="flex items-center mb-4">
-                <div className="bg-primary-500 p-2 rounded-xl">
-                  <MessageSquare className="h-6 w-6" />
-                </div>
-                <span className="ml-2 text-xl font-bold">MCP Chat Support</span>
+                <img src="/logo.png" alt="ClientSphere" className="h-10 w-10 rounded-lg" />
+                <span className="ml-2 text-xl font-bold">ClientSphere</span>
               </div>
               <p className="text-gray-400 mb-6">
-                Transforming customer support with AI-powered solutions for businesses of all sizes.
+                AI-powered chatbot & CRM platform. Transform customer relationships with intelligent conversations.
               </p>
             </div>
             
@@ -671,7 +667,7 @@ const LandingPage: React.FC = () => {
           </div>
           
           <div className="border-t border-gray-800 mt-12 pt-8 text-center text-gray-400">
-            <p>&copy; 2025 MCP Chat Support. All rights reserved.</p>
+            <p>&copy; 2025 ClientSphere. All rights reserved.</p>
           </div>
         </div>
       </footer>

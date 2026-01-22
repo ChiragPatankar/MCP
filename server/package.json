@@ -1,7 +1,7 @@
 {
   "name": "mcp-chat-support-backend",
   "version": "1.0.0",
-  "description": "Backend API for MCP Chat Support Platform",
+  "description": "Backend API for ClientSphere Platform",
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",

@@ -13,21 +13,19 @@ const GOOGLE_CLIENT_ID = '957446722705-e3g6jaj8mfq3n5dfj6cachhnn4dvr08k.apps.goo
 class GoogleAuthService {
   private clientId: string;
   private isInitialized: boolean = false;
+  private pendingSignIn: Promise<GoogleUser> | null = null;
+  private signInResolver: ((user: GoogleUser) => void) | null = null;
+  private signInRejecter: ((error: Error) => void) | null = null;
 
   constructor() {
-    // Debug all Vite environment variables
-    console.log('🔍 All import.meta.env:', import.meta.env);
-    console.log('🔍 VITE_GOOGLE_CLIENT_ID from env:', import.meta.env.VITE_GOOGLE_CLIENT_ID);
-    
-    // Use the provided client ID
-    this.clientId = GOOGLE_CLIENT_ID;
+    // Use environment variable if available, otherwise use the hardcoded client ID
+    this.clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID;
     
     // Debug: Log the client ID (masked for security)
     if (this.clientId) {
-      console.log('Google Client ID loaded:', this.clientId.substring(0, 10) + '...');
+      console.log('✅ Google Client ID loaded:', this.clientId.substring(0, 12) + '...');
     } else {
-      console.error('⚠️ VITE_GOOGLE_CLIENT_ID not found in environment variables');
-      console.log('Available env vars:', Object.keys(import.meta.env));
+      console.error('⚠️ No Google Client ID found!');
     }
   }
 
@@ -45,7 +43,57 @@ class GoogleAuthService {
     }
   }
 
-  // Initialize Google API
+  // Handle credential response - called by Google
+  private handleCredentialResponse = (response: any) => {
+    try {
+      if (!response.credential) {
+        throw new Error('No credential received from Google');
+      }
+      
+      // Decode JWT token
+      const payload = JSON.parse(atob(response.credential.split('.')[1]));
+      
+      if (!payload.sub || !payload.email) {
+        throw new Error('Invalid user data received from Google');
+      }
+      
+      const user: GoogleUser = {
+        id: payload.sub,
+        email: payload.email,
+        name: payload.name || payload.email,
+        picture: payload.picture || '',
+        credential: response.credential
+      };
+      
+      console.log('✅ Google sign-in successful:', user.email);
+      
+      // If there's a pending sign-in promise, resolve it
+      if (this.signInResolver) {
+        this.signInResolver(user);
+        this.cleanupPending();
+      } else {
+        // If button was rendered directly (no signIn() call), dispatch custom event
+        // This allows components to listen for Google auth completion
+        const event = new CustomEvent('google-auth-success', { detail: user });
+        window.dispatchEvent(event);
+        console.log('📢 Dispatched google-auth-success event (no pending sign-in)');
+      }
+    } catch (error) {
+      console.error('❌ Failed to decode Google token:', error);
+      if (this.signInRejecter) {
+        this.signInRejecter(new Error(`Google authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`));
+        this.cleanupPending();
+      } else {
+        // Dispatch error event if no pending sign-in
+        const event = new CustomEvent('google-auth-error', { 
+          detail: { error: error instanceof Error ? error.message : 'Unknown error' } 
+        });
+        window.dispatchEvent(event);
+      }
+    }
+  };
+
+  // Initialize Google API - only called ONCE
   async initialize(): Promise<void> {
     if (this.isInitialized) return;
 
@@ -53,137 +101,159 @@ class GoogleAuthService {
     this.validateClientId();
 
     return new Promise((resolve, reject) => {
+      // Check if script already loaded
+      if (window.google?.accounts?.id) {
+        this.initializeGoogleIdentity();
+        resolve();
+        return;
+      }
+
       // Load Google API script
+      const existingScript = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+      if (existingScript) {
+        // Wait for it to load
+        existingScript.addEventListener('load', () => {
+          this.initializeGoogleIdentity();
+          resolve();
+        });
+        return;
+      }
+
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
       script.onload = () => {
-        // Initialize Google Identity Services
-        if (window.google) {
-          try {
-            window.google.accounts.id.initialize({
-              client_id: this.clientId,
-              callback: this.handleCredentialResponse.bind(this),
-            });
-            this.isInitialized = true;
-            console.log('✅ Google Auth initialized successfully');
-            resolve();
-          } catch (error) {
-            console.error('❌ Google Auth initialization failed:', error);
-            reject(error);
-          }
-        } else {
-          reject(new Error('Google API failed to load'));
-        }
+        this.initializeGoogleIdentity();
+        resolve();
       };
       script.onerror = () => reject(new Error('Failed to load Google API'));
       document.head.appendChild(script);
     });
   }
 
-  // Handle Google OAuth response
-  private handleCredentialResponse(response: any) {
-    // This will be called automatically by Google
-    // The actual handling is done in the signIn method
-  }
-
-  // Sign in with Google
-  async signIn(): Promise<GoogleUser> {
+  private initializeGoogleIdentity() {
+    if (this.isInitialized || !window.google) return;
+    
     try {
-      await this.initialize();
-
-      return new Promise((resolve, reject) => {
-        if (!window.google) {
-          reject(new Error('Google API not loaded'));
-          return;
-        }
-
-        // Show Google Sign-In prompt
-        window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            // Fallback to popup
-            this.signInWithPopup().then(resolve).catch(reject);
-          }
-        });
-
-        // Set up credential response handler
-        window.google.accounts.id.initialize({
-          client_id: this.clientId,
-          callback: (response: any) => {
-            try {
-              // Decode JWT token
-              const payload = JSON.parse(atob(response.credential.split('.')[1]));
-              const user: GoogleUser = {
-                id: payload.sub,
-                email: payload.email,
-                name: payload.name,
-                picture: payload.picture,
-                credential: response.credential // Include the credential token
-              };
-              console.log('✅ Google sign-in successful:', user.email);
-              resolve(user);
-            } catch (error) {
-              console.error('❌ Failed to decode Google token:', error);
-              reject(error);
-            }
-          },
-        });
+      window.google.accounts.id.initialize({
+        client_id: this.clientId,
+        callback: this.handleCredentialResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true,
+        use_fedcm_for_prompt: false, // Disable FedCM to avoid the errors
       });
+      this.isInitialized = true;
+      console.log('✅ Google Auth initialized successfully');
     } catch (error) {
-      console.error('❌ Google sign-in error:', error);
+      console.error('❌ Google Auth initialization failed:', error);
       throw error;
     }
   }
 
-  // Fallback popup method
-  private async signInWithPopup(): Promise<GoogleUser> {
-    return new Promise((resolve, reject) => {
-      // Create OAuth URL
-      const oauth2Endpoint = 'https://accounts.google.com/o/oauth2/v2/auth';
-      const params = new URLSearchParams({
-        client_id: this.clientId,
-        redirect_uri: window.location.origin + '/auth/google/callback',
-        response_type: 'code',
-        scope: 'openid email profile',
-        state: Math.random().toString(36).substring(7),
+  // Sign in with Google - directly triggers Google's native popup
+  async signIn(): Promise<GoogleUser> {
+    // If there's already a pending sign-in, return that promise
+    if (this.pendingSignIn) {
+      console.log('⏳ Sign-in already in progress, waiting...');
+      return this.pendingSignIn;
+    }
+
+    try {
+      await this.initialize();
+
+      this.pendingSignIn = new Promise((resolve, reject) => {
+        this.signInResolver = resolve;
+        this.signInRejecter = reject;
+
+        if (!window.google) {
+          reject(new Error('Google API not loaded'));
+          this.pendingSignIn = null;
+          return;
+        }
+
+        // Directly trigger Google's sign-in button click programmatically
+        // This will open Google's native popup window
+        const buttonElement = document.createElement('div');
+        buttonElement.style.display = 'none';
+        document.body.appendChild(buttonElement);
+
+        // Render Google button invisibly and click it
+        window.google.accounts.id.renderButton(buttonElement, {
+          theme: 'outline',
+          size: 'large',
+          type: 'standard',
+          text: 'signin_with',
+        });
+
+        // Wait a moment for button to render, then click it
+        setTimeout(() => {
+          const googleButton = buttonElement.querySelector('div[role="button"]') as HTMLElement;
+          if (googleButton) {
+            googleButton.click();
+          } else {
+            // Fallback: trigger One Tap prompt
+            window.google.accounts.id.prompt((notification: any) => {
+              if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                // If One Tap doesn't work, create a temporary visible button
+                this.createTemporaryButton(resolve, reject);
+              } else if (notification.isDismissedMoment()) {
+                reject(new Error('Sign-in was dismissed'));
+                this.cleanupPending();
+              }
+            });
+          }
+          document.body.removeChild(buttonElement);
+        }, 100);
+
+        // Timeout after 60 seconds
+        setTimeout(() => {
+          if (this.signInRejecter) {
+            this.signInRejecter(new Error('Sign-in timed out'));
+            this.cleanupPending();
+          }
+        }, 60000);
       });
 
-      const authUrl = `${oauth2Endpoint}?${params}`;
-      
-      // Open popup window
-      const popup = window.open(
-        authUrl,
-        'googleAuth',
-        'width=500,height=600,scrollbars=yes,resizable=yes'
-      );
-
-      // Check for popup completion
-      const checkClosed = setInterval(() => {
-        if (popup?.closed) {
-          clearInterval(checkClosed);
-          reject(new Error('Authentication cancelled'));
-        }
-      }, 1000);
-
-      // Listen for message from popup
-      const messageHandler = (event: MessageEvent) => {
-        if (event.origin !== window.location.origin) return;
-        
-        if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
-          clearInterval(checkClosed);
-          popup?.close();
-          window.removeEventListener('message', messageHandler);
-          resolve(event.data.user);
-        } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
-          clearInterval(checkClosed);
-          popup?.close();
-          window.removeEventListener('message', messageHandler);
-          reject(new Error(event.data.error));
-        }
-      };
-
-      window.addEventListener('message', messageHandler);
-    });
+      return this.pendingSignIn;
+    } catch (error) {
+      console.error('❌ Google sign-in error:', error);
+      this.pendingSignIn = null;
+      throw error;
+    }
   }
+
+  private cleanupPending() {
+    this.signInResolver = null;
+    this.signInRejecter = null;
+    this.pendingSignIn = null;
+  }
+
+  private createTemporaryButton(resolve: (user: GoogleUser) => void, reject: (error: Error) => void) {
+    // Create a temporary button that will trigger Google's popup
+    const tempContainer = document.createElement('div');
+    tempContainer.style.position = 'fixed';
+    tempContainer.style.top = '-1000px';
+    tempContainer.style.left = '-1000px';
+    tempContainer.style.visibility = 'hidden';
+    document.body.appendChild(tempContainer);
+
+    window.google.accounts.id.renderButton(tempContainer, {
+      theme: 'outline',
+      size: 'large',
+      type: 'standard',
+      text: 'signin_with',
+    });
+
+    setTimeout(() => {
+      const button = tempContainer.querySelector('div[role="button"]') as HTMLElement;
+      if (button) {
+        button.click();
+      }
+      setTimeout(() => document.body.removeChild(tempContainer), 1000);
+    }, 100);
+  }
+
 
   // Render Google Sign-In button
   renderButton(element: HTMLElement, options: any = {}) {

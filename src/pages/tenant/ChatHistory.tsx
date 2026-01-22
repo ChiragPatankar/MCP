@@ -380,11 +380,11 @@ const ChatHistoryPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
         <div className="space-y-8 pb-8">
           {/* Modern Header */}
-          <div className="bg-gradient-to-r from-white via-green-50 to-blue-50 border-b border-gray-100 shadow-soft -mx-6 px-6 py-6">
+          <div className="bg-gradient-to-r from-white via-green-50 to-blue-50 border-b border-gray-100 shadow-soft -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
                     Chat History
                   </h1>
                   {chatHistory.length > 0 && (
@@ -428,7 +428,7 @@ const ChatHistoryPage: React.FC = () => {
                   </Button>
 
                   {showNotifications && (
-                    <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-large z-50">
+                    <div className="absolute right-0 mt-2 w-[calc(100vw-2rem)] sm:w-80 bg-white border border-gray-200 rounded-xl shadow-large z-50">
                       <div className="p-4 border-b border-gray-100">
                         <h3 className="font-semibold text-gray-900">Chat History Notifications</h3>
                       </div>

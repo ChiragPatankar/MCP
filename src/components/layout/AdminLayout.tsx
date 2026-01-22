@@ -39,10 +39,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <aside className="hidden md:flex flex-col w-64 bg-gray-900 text-white">
         <div className="p-6">
           <div className="flex items-center space-x-2">
-            <div className="bg-primary text-white p-2 rounded-md">
-              <Shield className="h-6 w-6" />
-            </div>
-            <span className="text-xl font-bold">MCP Admin</span>
+            <img src="/logo.png" alt="ClientSphere" className="h-10 w-10 rounded-lg" />
+            <span className="text-xl font-bold">ClientSphere</span>
           </div>
         </div>
         <nav className="flex-1 px-4 py-2 space-y-1">
@@ -88,10 +86,8 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <div className="md:hidden fixed top-0 left-0 right-0 bg-gray-900 text-white z-10">
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center space-x-2">
-            <div className="bg-primary text-white p-1.5 rounded-md">
-              <Shield className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-bold">MCP Admin</span>
+            <img src="/logo.png" alt="ClientSphere" className="h-8 w-8 rounded-lg" />
+            <span className="text-lg font-bold">ClientSphere</span>
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}

@@ -79,13 +79,13 @@ router.get('/script/:tenantId', async (req, res) => {
 
     const script = `
 (function() {
-  // MCP Chat Widget
+  // ClientSphere Chat Widget
   const TENANT_ID = '${tenantId}';
   const API_URL = '${process.env.FRONTEND_URL || 'http://localhost:3001'}/api';
   
   // Create widget container
   const widget = document.createElement('div');
-  widget.id = 'mcp-chat-widget';
+  widget.id = 'clientsphere-chat-widget';
   widget.style.cssText = \`
     position: fixed;
     bottom: 20px;
@@ -104,7 +104,7 @@ router.get('/script/:tenantId', async (req, res) => {
 
   // Create chat button
   const button = document.createElement('div');
-  button.id = 'mcp-chat-button';
+  button.id = 'clientsphere-chat-button';
   button.style.cssText = \`
     position: fixed;
     bottom: 20px;
@@ -148,12 +148,12 @@ router.get('/script/:tenantId', async (req, res) => {
       <h3 style="margin: 0; font-size: 16px; font-weight: 600;">Chat Support</h3>
       <p style="margin: 4px 0 0 0; font-size: 12px; opacity: 0.9;">We're here to help!</p>
     </div>
-    <button id="mcp-close-btn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px;">×</button>
+    <button id="clientsphere-close-btn" style="background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px;">×</button>
   \`;
 
   // Messages container
   const messages = document.createElement('div');
-  messages.id = 'mcp-messages';
+  messages.id = 'clientsphere-messages';
   messages.style.cssText = \`
     flex: 1;
     padding: 16px;
@@ -273,8 +273,8 @@ router.get('/script/:tenantId', async (req, res) => {
       // Remove typing indicator
       typingEl.remove();
       
-      // Add AI response
-      addMessage('ai', data.response);
+      // Add AI response with optional RAG metadata
+      addMessage('ai', data.response, false, data.rag || null);
       
     } catch (error) {
       typingEl.remove();
@@ -283,7 +283,10 @@ router.get('/script/:tenantId', async (req, res) => {
   }
 
   // Add message to chat
-  function addMessage(sender, text, isTyping = false) {
+  function addMessage(sender, text, isTyping = false, rag = null) {
+    const isAi = sender === 'ai';
+    const isRefused = !!(rag && rag.refused);
+
     const messageEl = document.createElement('div');
     messageEl.style.cssText = \`
       max-width: 80%;
@@ -293,12 +296,123 @@ router.get('/script/:tenantId', async (req, res) => {
       line-height: 1.4;
       \${sender === 'user' ? 
         'background: #6366f1; color: white; align-self: flex-end; margin-left: auto;' : 
-        'background: #f3f4f6; color: #374151; align-self: flex-start;'
+        isRefused
+          ? 'background: #FEF3C7; color: #92400E; align-self: flex-start; border: 1px solid #FBBF24;'
+          : 'background: #f3f4f6; color: #374151; align-self: flex-start;'
       }
       \${isTyping ? 'opacity: 0.7; font-style: italic;' : ''}
     \`;
     
-    messageEl.textContent = text;
+    const contentEl = document.createElement('div');
+    contentEl.textContent = text;
+    messageEl.appendChild(contentEl);
+
+    // RAG metadata (citations, confidence, refusal)
+    if (isAi && !isTyping && rag) {
+      const metaContainer = document.createElement('div');
+      metaContainer.style.cssText = 'margin-top: 8px; border-top: 1px solid rgba(209,213,219,0.7); padding-top: 8px;';
+
+      // Confidence badge
+      if (typeof rag.confidence === 'number') {
+        const badge = document.createElement('span');
+        let label = 'Low confidence';
+        let bg = '#FEE2E2';
+        let color = '#991B1B';
+
+        if (rag.confidence >= 0.50) {
+          label = 'Very High confidence';
+          bg = '#DCFCE7';
+          color = '#166534';
+        } else if (rag.confidence >= 0.40) {
+          label = 'High confidence';
+          bg = '#BBF7D0';
+          color = '#14532D';
+        } else if (rag.confidence >= 0.30) {
+          label = 'Medium confidence';
+          bg = '#FEF9C3';
+          color = '#92400E';
+        }
+
+        badge.textContent = label;
+        badge.style.cssText = \`display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 11px; background: \${bg}; color: \${color}; margin-right: 8px;\`;
+        metaContainer.appendChild(badge);
+      }
+
+      // Refusal state + CTAs
+      if (rag.refused) {
+        const refusedBadge = document.createElement('span');
+        refusedBadge.textContent = 'Answer limited for safety';
+        refusedBadge.style.cssText = 'display:inline-block;padding:2px 8px;border-radius:9999px;font-size:11px;background:#FEF3C7;color:#92400E;margin-right:8px;';
+        metaContainer.appendChild(refusedBadge);
+
+        const ctaContainer = document.createElement('div');
+        ctaContainer.style.cssText = 'margin-top: 8px; display: flex; gap: 8px; flex-wrap: wrap;';
+
+        const contactBtn = document.createElement('button');
+        contactBtn.textContent = 'Contact Support';
+        contactBtn.style.cssText = 'padding:6px 10px;font-size:12px;border-radius:9999px;border:none;background:#6366f1;color:white;cursor:pointer;';
+        contactBtn.onclick = () => {
+          window.location.href = 'mailto:support@clientsphere.com?subject=AI%20assistance%20needed';
+        };
+
+        const ticketBtn = document.createElement('button');
+        ticketBtn.textContent = 'Create Ticket';
+        ticketBtn.style.cssText = 'padding:6px 10px;font-size:12px;border-radius:9999px;border:1px solid #d1d5db;background:white;color:#374151;cursor:pointer;';
+        ticketBtn.onclick = () => {
+          window.location.href = '/contact-support';
+        };
+
+        ctaContainer.appendChild(contactBtn);
+        ctaContainer.appendChild(ticketBtn);
+        metaContainer.appendChild(ctaContainer);
+      }
+
+      // Citations / sources
+      if (Array.isArray(rag.citations) && rag.citations.length > 0) {
+        const toggleBtn = document.createElement('button');
+        toggleBtn.textContent = \`Sources (\${rag.citations.length})\`;
+        toggleBtn.style.cssText = 'margin-top:6px;font-size:12px;color:#4B5563;text-decoration:underline;background:none;border:none;padding:0;cursor:pointer;';
+
+        const panel = document.createElement('div');
+        panel.style.cssText = 'margin-top:6px;padding:8px;border-radius:8px;background:#F9FAFB;max-height:150px;overflow-y:auto;display:none;font-size:12px;';
+
+        rag.citations.forEach(function (c) {
+          const item = document.createElement('div');
+          item.style.cssText = 'margin-bottom:6px;';
+
+          const title = document.createElement('div');
+          title.style.cssText = 'font-weight:500;color:#111827;';
+          title.textContent = c.file_name || 'Source';
+          if (typeof c.page === 'number') {
+            title.textContent += ' (Page ' + c.page + ')';
+          }
+
+          const snippet = document.createElement('div');
+          snippet.style.cssText = 'color:#4B5563;margin-top:2px;';
+          if (c.text_preview) {
+            snippet.textContent = c.text_preview;
+          }
+
+          item.appendChild(title);
+          if (c.text_preview) item.appendChild(snippet);
+          panel.appendChild(item);
+        });
+
+        let isOpen = false;
+        toggleBtn.onclick = () => {
+          isOpen = !isOpen;
+          panel.style.display = isOpen ? 'block' : 'none';
+        };
+
+        metaContainer.appendChild(toggleBtn);
+        metaContainer.appendChild(panel);
+      }
+
+      if (metaContainer.children.length > 0) {
+        messageEl.appendChild(metaContainer);
+      }
+    }
+
     messages.appendChild(messageEl);
     messages.scrollTop = messages.scrollHeight;
     
@@ -307,13 +421,13 @@ router.get('/script/:tenantId', async (req, res) => {
 
   // Event listeners
   button.onclick = toggleWidget;
-  header.querySelector('#mcp-close-btn').onclick = toggleWidget;
+  header.querySelector('#clientsphere-close-btn').onclick = toggleWidget;
   sendBtn.onclick = () => sendMessage(input.value);
   input.onkeypress = (e) => {
     if (e.key === 'Enter') sendMessage(input.value);
   };
 
-  console.log('MCP Chat Widget loaded successfully');
+  console.log('ClientSphere Chat Widget loaded successfully');
 })();
 `;
 

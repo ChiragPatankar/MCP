@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import { User } from "@/types";
 import { googleAuth, GoogleUser } from "@/lib/googleAuth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://mcp-backend.officialchiragp1605.workers.dev';
 
 interface AuthContextType {
   user: User | null;
@@ -36,6 +36,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     setIsLoading(false);
     console.log('🔐 AuthProvider: Initialization complete');
+    
+    // Listen for storage events (when localStorage is updated from other tabs/components)
+    const handleStorageChange = () => {
+      const updatedUser = localStorage.getItem("mcp-user");
+      const updatedToken = localStorage.getItem("auth-token");
+      if (updatedUser && updatedToken) {
+        const parsedUser = JSON.parse(updatedUser);
+        console.log('🔐 AuthProvider: User updated from storage:', parsedUser);
+        setUser(parsedUser);
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const login = async (email: string, password: string) => {

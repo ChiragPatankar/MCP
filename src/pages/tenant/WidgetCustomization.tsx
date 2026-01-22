@@ -81,9 +81,9 @@ const WidgetCustomizationPage: React.FC = () => {
 
   // Generate embed code
   const generateEmbedCode = () => {
-    return `<!-- MCP Chat Widget -->
+    return `<!-- ClientSphere Chat Widget -->
 <script>
-  window.mcpChatConfig = {
+  window.clientSphereConfig = {
     apiKey: "YOUR_API_KEY",
     primaryColor: "${widgetConfig.primaryColor}",
     secondaryColor: "${widgetConfig.secondaryColor}",
@@ -94,7 +94,7 @@ const WidgetCustomizationPage: React.FC = () => {
     logoUrl: "${widgetConfig.logoUrl}"
   };
 </script>
-<script src="https://cdn.mcpchat.com/widget.js" async></script>`;
+<script src="https://cdn.clientsphere.io/widget.js" async></script>`;
   };
 
   // Copy embed code to clipboard
@@ -110,11 +110,11 @@ const WidgetCustomizationPage: React.FC = () => {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
         <div className="space-y-8 pb-8">
           {/* Modern Header */}
-          <div className="bg-white border-b border-gray-100 -mx-6 px-6 py-6">
+          <div className="bg-white border-b border-gray-100 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 sm:py-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center">
               <div className="space-y-3">
                 <div className="flex items-center space-x-4">
-                  <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
+                  <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-900 via-primary-600 to-purple-600 bg-clip-text text-transparent">
                     Widget Customization
                   </h1>
                   <div className="flex items-center bg-blue-100 text-blue-700 px-3 py-1.5 rounded-full shadow-sm">

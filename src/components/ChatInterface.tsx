@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Sparkles, Zap } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
+import { getEndpointUrl } from '@/config/api';
 
 interface Message {
   id: string;
@@ -57,37 +58,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   // Initialize chat session
   useEffect(() => {
-    const initializeChat = async () => {
-      const token = localStorage.getItem('auth-token');
-      if (!token) {
-        console.error('No auth token found');
-        return;
-      }
-
-      try {
-        const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-        const response = await fetch(`${API_BASE_URL}/chat/sessions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            domain: window.location.hostname,
-            userAgent: navigator.userAgent
-          }),
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          setSessionToken(data.sessionToken);
-          setTenantId(data.tenantId);
-        } else {
-          console.error('Failed to create chat session');
-        }
-      } catch (error) {
-        console.error('Error initializing chat session:', error);
-      }
+    // For Hugging Face MCP server, we'll use a simplified approach
+    // The session token and tenant ID can be generated locally for this demo
+    const initializeChat = () => {
+      // Generate a simple session token for the demo
+      const sessionToken = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const tenantId = user?.id || `tenant_${Math.random().toString(36).substr(2, 9)}`;
+      
+      setSessionToken(sessionToken);
+      setTenantId(tenantId);
+      
+      console.log('Chat session initialized:', { sessionToken, tenantId });
     };
 
     initializeChat();
@@ -115,16 +96,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setIsLoading(true);
 
     try {
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/chat/messages`, {
+      // Use the centralized API configuration
+      const response = await fetch(getEndpointUrl('PROCESS'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-mcp-auth': 'demo-token', // Add required auth header
         },
         body: JSON.stringify({
-          sessionToken,
-          message: userMessage.content,
-          tenantId
+          query: userMessage.content, // Use 'query' instead of 'prompt'
+          sessionId: sessionToken,
+          userId: tenantId
         }),
       });
 
@@ -133,12 +115,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       }
 
       const data = await response.json();
+      
+      // Handle the MCP server response format
+      const botResponse = data.response || data.message || data.content || "I received your message but couldn't generate a proper response.";
+      
+      console.log('MCP Server Response:', data); // For debugging
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: data.response,
+        content: botResponse,
         sender: 'bot',
-        timestamp: new Date(data.timestamp)
+        timestamp: new Date()
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -147,7 +134,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: "I'm sorry, I'm experiencing technical difficulties. Please try again in a moment. 🔧",
+        content: "I'm sorry, I'm experiencing technical difficulties connecting to the AI server. Please check that the MCP server is running and try again. 🔧",
         sender: 'bot',
         timestamp: new Date()
       };

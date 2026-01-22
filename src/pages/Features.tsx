@@ -52,7 +52,7 @@ const testimonial = {
   role: 'Head of Customer Success',
   company: 'TechFlow',
   image: 'https://images.pexels.com/photos/415829/pexels-photo-415829.jpeg?auto=compress&cs=tinysrgb&w=400',
-  content: 'MCP Chat Support reduced our response time by 85% and improved customer satisfaction significantly. The AI is incredibly smart.',
+  content: 'ClientSphere reduced our response time by 85% and improved customer satisfaction significantly. The AI is incredibly smart.',
   rating: 5
 };
 
@@ -79,7 +79,7 @@ const Features: React.FC = () => (
       {/* Hero Section */}
       <div className="mb-12">
         <p className="text-xl text-gray-700 max-w-2xl">
-          Discover the powerful features that make MCP Chat Support the most advanced AI customer support platform for businesses of all sizes.
+          Discover the powerful features that make ClientSphere the most advanced AI customer support platform for businesses of all sizes.
         </p>
       </div>
       {/* Features Grid */}

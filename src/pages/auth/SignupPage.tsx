@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { MessageSquare, Mail, Lock, User, Building, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, User, Building, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/AuthContext';
 
@@ -49,10 +49,8 @@ const SignupPage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link to="/" className="flex items-center justify-center">
-          <div className="bg-primary text-white p-2 rounded-md">
-            <MessageSquare className="h-6 w-6" />
-          </div>
-          <span className="ml-2 text-xl font-bold">MCP Chat Support</span>
+          <img src="/logo.png" alt="ClientSphere" className="h-12 w-12 rounded-lg" />
+          <span className="ml-2 text-xl font-bold">ClientSphere</span>
         </Link>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           Create your account

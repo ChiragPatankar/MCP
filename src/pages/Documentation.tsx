@@ -6,7 +6,7 @@ const docs = [
   {
     icon: <BookOpen className="h-8 w-8 text-blue-500" />,
     title: 'Getting Started',
-    description: 'Step-by-step guide to set up and launch MCP Chat Support.'
+    description: 'Step-by-step guide to set up and launch ClientSphere.'
   },
   {
     icon: <FileText className="h-8 w-8 text-purple-500" />,
@@ -16,7 +16,7 @@ const docs = [
   {
     icon: <Code className="h-8 w-8 text-green-500" />,
     title: 'Integration Guides',
-    description: 'How to integrate MCP Chat Support with your website or app.'
+    description: 'How to integrate ClientSphere with your website or app.'
   },
   {
     icon: <HelpCircle className="h-8 w-8 text-yellow-500" />,
@@ -30,7 +30,7 @@ const testimonial = {
   role: 'Support Manager',
   company: 'CloudScale',
   image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=400',
-  content: 'The documentation is clear and easy to follow. We integrated MCP Chat Support in less than an hour!',
+  content: 'The documentation is clear and easy to follow. We integrated ClientSphere in less than an hour!',
   rating: 5
 };
 
@@ -57,7 +57,7 @@ const Documentation: React.FC = () => (
       {/* Hero Section */}
       <div className="mb-12">
         <p className="text-xl text-gray-700 max-w-2xl">
-          Everything you need to get started, integrate, and master MCP Chat Support.
+          Everything you need to get started, integrate, and master ClientSphere.
         </p>
       </div>
       {/* Documentation Cards */}
@@ -91,7 +91,7 @@ const Documentation: React.FC = () => (
       <div className="mt-20 flex justify-center">
         <div className="bg-gradient-to-r from-primary-500 to-blue-500 rounded-2xl shadow-lg px-10 py-8 flex flex-col items-center text-center">
           <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center">
-            <Rocket className="h-6 w-6 mr-2" /> Ready to build with MCP Chat Support?
+            <Rocket className="h-6 w-6 mr-2" /> Ready to build with ClientSphere?
           </h2>
           <p className="text-white/90 mb-6">Start your free trial today and experience the future of customer support.</p>
           <Link to="/signup" className="inline-flex items-center bg-white text-primary-600 font-semibold px-6 py-3 rounded-lg shadow hover:bg-gray-50 transition-all">

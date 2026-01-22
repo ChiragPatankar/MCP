@@ -15,8 +15,8 @@ interface LandingPageChatProps {
 
 // Platform knowledge base for the demo chatbot
 const PLATFORM_CONTEXT = {
-  company: "MCP Chat Support",
-  description: "AI-powered customer support platform",
+  company: "ClientSphere",
+  description: "AI-powered chatbot & CRM platform",
   features: [
     "AI chatbot powered by Google Gemini",
     "Knowledge base integration",
@@ -48,7 +48,7 @@ const getAIResponse = (userMessage: string): string => {
   
   // Greetings
   if (message.includes('hello') || message.includes('hi') || message.includes('hey')) {
-    return "Hello! 👋 Welcome to MCP Chat Support! I'm here to help you learn about our AI-powered customer support platform. What would you like to know?";
+    return "Hello! 👋 Welcome to ClientSphere! I'm here to help you learn about our AI-powered chatbot & CRM platform. What would you like to know?";
   }
   
   // Features
@@ -68,7 +68,7 @@ const getAIResponse = (userMessage: string): string => {
   
   // Benefits/Why choose
   if (message.includes('benefit') || message.includes('why') || message.includes('advantage')) {
-    return `Here's why businesses love MCP Chat Support:\n\n📈 **Reduce workload by 70%** - AI handles routine questions\n⏰ **24/7 availability** - Never miss a customer inquiry\n⚡ **Instant responses** - No more waiting times\n💰 **Cost effective** - Much cheaper than hiring support staff\n📊 **Detailed insights** - Understand your customers better\n🔧 **Easy maintenance** - Updates knowledge base anytime\n\nReady to transform your customer support?`;
+    return `Here's why businesses love ClientSphere:\n\n📈 **Reduce workload by 70%** - AI handles routine questions\n⏰ **24/7 availability** - Never miss a customer inquiry\n⚡ **Instant responses** - No more waiting times\n💰 **Cost effective** - Much cheaper than hiring support staff\n📊 **Built-in CRM** - Manage all customer relationships\n🔧 **Easy maintenance** - Updates knowledge base anytime\n\nReady to transform your customer relationships?`;
   }
   
   // Technical questions
@@ -83,14 +83,14 @@ const getAIResponse = (userMessage: string): string => {
   
   // Contact/Support
   if (message.includes('contact') || message.includes('support') || message.includes('help')) {
-    return `I'm here to help! 😊\n\n💬 **Chat with me** - Ask anything about our platform\n📧 **Email us** - support@mcpchat.com\n📅 **Book a demo** - Schedule a personal walkthrough\n📚 **Documentation** - Detailed guides and tutorials\n\nWhat specific question do you have? I'd love to help!`;
+    return `I'm here to help! 😊\n\n💬 **Chat with me** - Ask anything about our platform\n📧 **Email us** - support@clientsphere.com\n📅 **Book a demo** - Schedule a personal walkthrough\n📚 **Documentation** - Detailed guides and tutorials\n\nWhat specific question do you have? I'd love to help!`;
   }
   
   // Default responses for unclear queries
   const defaultResponses = [
     "That's a great question! Let me help you with that. Could you tell me more about what you're looking for? I can explain our features, pricing, setup process, or benefits.",
-    "I'd be happy to help! Are you interested in learning about our AI features, pricing plans, or how to get started?",
-    "Thanks for asking! I can provide information about our platform's capabilities, pricing, setup process, or answer any other questions you have about MCP Chat Support."
+    "I'd be happy to help! Are you interested in learning about our AI chatbot, CRM features, pricing plans, or how to get started?",
+    "Thanks for asking! I can provide information about our platform's capabilities, pricing, setup process, or answer any other questions you have about ClientSphere."
   ];
   
   return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
@@ -102,7 +102,7 @@ const LandingPageChat: React.FC<LandingPageChatProps> = ({ className = '' }) => 
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "👋 Hi there! I'm your AI assistant for MCP Chat Support. I can answer questions about our features, pricing, setup process, and more. What would you like to know?",
+      content: "👋 Hi there! I'm your AI assistant for ClientSphere. I can answer questions about our chatbot & CRM features, pricing, setup process, and more. What would you like to know?",
       sender: 'bot',
       timestamp: new Date()
     }
@@ -186,7 +186,7 @@ const LandingPageChat: React.FC<LandingPageChatProps> = ({ className = '' }) => 
           
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-sm rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-            Ask me about MCP Chat Support!
+            Ask me about ClientSphere!
           </div>
         </motion.button>
       )}
@@ -206,11 +206,9 @@ const LandingPageChat: React.FC<LandingPageChatProps> = ({ className = '' }) => 
             <div className="flex-shrink-0 p-4 bg-primary text-white rounded-t-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
-                    <Bot className="h-4 w-4 text-white" />
-                  </div>
+                  <img src="/logo.png" alt="ClientSphere" className="w-8 h-8 rounded-full" />
                   <div className="ml-2">
-                    <p className="font-medium text-sm">MCP Assistant</p>
+                    <p className="font-medium text-sm">ClientSphere AI</p>
                     <p className="text-xs opacity-90">Ask me anything!</p>
                   </div>
                 </div>
