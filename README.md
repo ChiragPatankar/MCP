@@ -129,4 +129,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
+<<<<<<< HEAD
 **ClientSphere** - Your customers, connected. 🌐
+=======
+Made with ❤️ by Chirag 
+>>>>>>> 7c7c9ed51d81813405e7ded2f90e85d31ab34c6b
