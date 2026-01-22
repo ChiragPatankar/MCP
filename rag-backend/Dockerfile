@@ -22,13 +22,13 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p data/uploads data/processed data/vectordb data/billing
 
-# Expose port
-EXPOSE 8000
+# Expose port (Hugging Face Spaces uses 7860, but we'll use PORT env var)
+EXPOSE 7860
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:8000/health/live || exit 1
+    CMD curl -f http://localhost:${PORT:-7860}/health/live || exit 1
 
-# Start the application
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Start the application (Hugging Face Spaces provides PORT env var)
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-7860}
 
