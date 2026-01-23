@@ -4,12 +4,37 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-// In production, prefer the environment variable, but fallback to HF Space if not set
-const RAG_API_URL = import.meta.env.VITE_RAG_API_URL || 
-  (import.meta.env.PROD ? 'https://ChiragPatankar-RAG_backend.hf.space' : 'http://localhost:8000');
+/**
+ * Get RAG API URL with safe fallbacks
+ * Priority:
+ * 1. VITE_RAG_API_URL environment variable (set at build time)
+ * 2. Production: Hugging Face Space URL (never localhost in prod)
+ * 3. Development: localhost for local dev
+ */
+function getRAGApiUrl(): string {
+  // If environment variable is explicitly set, use it
+  if (import.meta.env.VITE_RAG_API_URL) {
+    return import.meta.env.VITE_RAG_API_URL;
+  }
+  
+  // In production builds, NEVER use localhost - always use HF Space
+  if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
+    return 'https://ChiragPatankar-RAG_backend.hf.space';
+  }
+  
+  // Only use localhost in development
+  return 'http://localhost:8000';
+}
 
-// Log the API URL to help debug
-console.log('🔗 RAG API URL:', RAG_API_URL);
+const RAG_API_URL = getRAGApiUrl();
+
+// Log the API URL at startup for verification (always visible in production)
+console.log('✅ RAG API URL =', RAG_API_URL);
+console.log('✅ Environment:', import.meta.env.MODE || 'unknown');
+console.log('✅ VITE_RAG_API_URL set:', !!import.meta.env.VITE_RAG_API_URL);
+if (import.meta.env.PROD) {
+  console.log('✅ Production build - using:', RAG_API_URL);
+}
 
 // Types matching backend schemas
 export interface Citation {
