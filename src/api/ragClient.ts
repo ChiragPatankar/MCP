@@ -4,12 +4,12 @@
  */
 import axios, { AxiosInstance, AxiosError } from 'axios';
 
-const RAG_API_URL = import.meta.env.VITE_RAG_API_URL || 'http://localhost:8000';
+// In production, prefer the environment variable, but fallback to HF Space if not set
+const RAG_API_URL = import.meta.env.VITE_RAG_API_URL || 
+  (import.meta.env.PROD ? 'https://ChiragPatankar-RAG_backend.hf.space' : 'http://localhost:8000');
 
-// Log the API URL in development to help debug
-if (import.meta.env.DEV) {
-  console.log('🔗 RAG API URL:', RAG_API_URL);
-}
+// Log the API URL to help debug
+console.log('🔗 RAG API URL:', RAG_API_URL);
 
 // Types matching backend schemas
 export interface Citation {
