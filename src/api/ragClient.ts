@@ -6,6 +6,11 @@ import axios, { AxiosInstance, AxiosError } from 'axios';
 
 const RAG_API_URL = import.meta.env.VITE_RAG_API_URL || 'http://localhost:8000';
 
+// Log the API URL in development to help debug
+if (import.meta.env.DEV) {
+  console.log('🔗 RAG API URL:', RAG_API_URL);
+}
+
 // Types matching backend schemas
 export interface Citation {
   file_name: string;
@@ -284,6 +289,9 @@ export class RAGClient {
   static async getKBStats(kbId: string = 'default'): Promise<KnowledgeBaseStats> {
     const token = getAuthToken();
     
+    // Log the API URL being used (helpful for debugging)
+    console.log('📊 Fetching KB stats from:', RAG_API_URL);
+    
     // Try to get tenant_id and user_id from JWT or localStorage
     let tenantId: string | undefined;
     let userId: string | undefined;
@@ -312,14 +320,36 @@ export class RAGClient {
       throw new Error('Authentication required. Please log in.');
     }
 
-    const response = await ragClient.get('/kb/stats', {
-      params: { 
-        kb_id: kbId,
-        tenant_id: tenantId,
-        user_id: userId,
-      },
-    });
-    return response.data;
+    try {
+      const response = await ragClient.get('/kb/stats', {
+        params: { 
+          kb_id: kbId,
+          tenant_id: tenantId,
+          user_id: userId,
+        },
+      });
+      return response.data;
+    } catch (error: any) {
+      // Enhanced error logging
+      console.error('❌ KB Stats Error:', {
+        url: `${RAG_API_URL}/kb/stats`,
+        error: error.message,
+        response: error.response?.data,
+        status: error.response?.status,
+        config: error.config,
+      });
+      
+      // If it's a CORS error or connection refused, provide helpful message
+      if (error.code === 'ERR_NETWORK' || error.message?.includes('CORS') || error.message?.includes('localhost')) {
+        throw new Error(
+          `Cannot connect to RAG backend. Please ensure VITE_RAG_API_URL is set correctly. ` +
+          `Current URL: ${RAG_API_URL}. ` +
+          `If deployed, update the environment variable in Cloudflare Pages.`
+        );
+      }
+      
+      throw error;
+    }
   }
 
   /**

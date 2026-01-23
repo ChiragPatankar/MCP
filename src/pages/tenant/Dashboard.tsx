@@ -228,18 +228,40 @@ const Dashboard: React.FC = () => {
   // Check onboarding status on mount
   useEffect(() => {
     if (user) {
+      // Only show onboarding for truly new users (created less than 24 hours ago)
+      // OR if they haven't completed it yet (check localStorage)
       const formCompleted = localStorage.getItem(`${ONBOARDING_FORM_KEY}_${user.id}`);
       const tourCompleted = localStorage.getItem(`${PRODUCT_TOUR_KEY}_${user.id}`);
       
-      if (!formCompleted) {
-        // Show onboarding form for new users
+      // Parse the stored completion data to check if it's valid
+      let formCompletedData = null;
+      let tourCompletedData = null;
+      
+      try {
+        if (formCompleted) {
+          formCompletedData = JSON.parse(formCompleted);
+        }
+        if (tourCompleted) {
+          tourCompletedData = JSON.parse(tourCompleted);
+        }
+      } catch (e) {
+        // Invalid JSON, treat as not completed
+        console.warn('Invalid onboarding data in localStorage:', e);
+      }
+      
+      // Only show onboarding if:
+      // 1. User is new (created < 24 hours ago) AND hasn't completed onboarding
+      // 2. OR user has never completed onboarding (no localStorage entry)
+      if (isNewUser && !formCompletedData) {
+        // Show onboarding form for new users only
         setShowOnboardingForm(true);
-      } else if (!tourCompleted) {
-        // Show product tour after form is completed
+      } else if (isNewUser && formCompletedData && !tourCompletedData) {
+        // Show product tour after form is completed (for new users only)
         setShowProductTour(true);
       }
+      // If user is not new OR has completed onboarding, don't show anything
     }
-  }, [user]);
+  }, [user, isNewUser]);
   
   const handleOnboardingFormComplete = async (data: any) => {
     console.log('📝 Onboarding data:', data);
