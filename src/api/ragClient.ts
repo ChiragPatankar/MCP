@@ -18,9 +18,9 @@ function getRAGApiUrl(): string {
   }
   
   // In production builds, NEVER use localhost - always use HF Space
-  // Note: Hugging Face Spaces URLs are case-sensitive
+  // Note: Hugging Face Spaces URLs convert underscores to hyphens!
   if (import.meta.env.PROD || import.meta.env.MODE === 'production') {
-    return 'https://chiragpatankar-rag_backend.hf.space';
+    return 'https://chiragpatankar-rag-backend.hf.space';
   }
   
   // Only use localhost in development
